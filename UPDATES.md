@@ -1,3 +1,11 @@
+## 18 October 2026 — simplified task cards
+
+Task cards show “Reward:” followed by the amount in the selected display currency. Internal task IDs and provider names are no longer displayed on task cards.
+
+## 18 October 2026 — flat referral reward
+
+New referral awards pay USD 0.01 per qualifying approved email task, both before and after the referred member’s first 30 days. The 72-hour hold and final moderation approval still apply. Historical awards, ledger credits and fractional remainders are retained. The dashboard no longer shows the former Google/UGX reward estimates. Earlier referral pricing notes below describe the historical policy.
+
 # October 18 update
 
 ### Profile page and payout identity privacy

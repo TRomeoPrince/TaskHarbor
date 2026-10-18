@@ -5,7 +5,7 @@ export function shortReferral(db,userId){
  throw Error('Unable to generate referral link');
 }
 import {entry} from './store.js';
-export const referralPolicy={firstMicros:72526,laterMicros:4835,googleRate:4136.459,rateAsOf:'2026-10-17T14:42:19Z',source:'https://www.google.com/finance/quote/USD-UGX',days:30};
+export const referralPolicy={firstMicros:10000,laterMicros:10000,days:30};
 export function provisionProfiles(db){
  for(const u of db.prepare('SELECT id,created_at FROM users WHERE id NOT IN (SELECT user_id FROM profiles)').all())db.prepare('INSERT INTO profiles VALUES(?,?,?,?,?)').run(u.id,'worker-'+u.id.replaceAll('-','').slice(0,12),randomUUID(),null,Date.parse(u.created_at+'Z'));
  db.prepare("INSERT OR IGNORE INTO leases SELECT id,worker_id,? FROM tasks WHERE status='claimed'").run(Date.now()+30*60000);

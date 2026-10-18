@@ -1,6 +1,6 @@
 # TaskHarbor — Codex Cloud continuation
 
-Prepared 18 October 2026, Africa/Kampala. Read this document before changing behavior. Preserve existing work and financial records. The latest unfinished user request is **restructure referral pricing**; no replacement amounts have been agreed. Do not assume 73 cents equals $0.073.
+Prepared 18 October 2026, Africa/Kampala. Read this document before changing behavior. Preserve existing work and financial records. The user approved **USD 0.01 per qualifying approved email task at all times**, including after the first 30 days. This replaces both referral rates for new awards; historical awards and balances remain unchanged.
 
 ## Repository and migration state
 
@@ -59,13 +59,13 @@ Images are base64 in import JSON and stored as BLOBs in the private SQLite DB. S
 - Payout feed requires login, returns latest 100 paid requests, chosen username or masked email, masked destination and amount/date. Full destinations and payment references are not returned in the feed. Admin processing still sees destinations.
 - Profile supports optional username, password change using the old password, saved display currency, private account details and referral link. Other sessions are revoked on password change. User-facing terminology is member rather than worker; internal role name remains worker.
 
-## Referrals — important unfinished decision
+## Referrals — approved flat rate
 
-Current implementation: referral links use `/r/` plus an eight-character random code; old UUID links remain valid. Referrer can only be set at registration and cannot subsequently be changed. First-period qualification is based on initial submission during the referred member's first **30 days after signup**, not a calendar month; payment occurs only at final moderation release.
+The user confirmed on 18 October 2026 that referrers earn **USD 0.01 per approved email task completed by a referred member at all times**, including after the first 30 days. Both policy rates are now 10,000 integer millionths of USD. There is no Google/UGX pricing baseline for new awards. The existing eligibility rule remains one award per qualifying manual-telegram task, paid only at final moderation release after the 72-hour hold. Denied tasks do not earn awards.
 
-Existing fixed amounts are USD **0.072526** then USD **0.004835**, derived from approximately UGX 300 / UGX 20 and a checked Google quote of 4,136.459 UGX/USD at 17 October 2026 14:42:19 UTC. Rates are stored as integer millionths of USD. Whole cents transfer to the ledger; fractional remainders remain visible and accumulate. One referral award per qualifying manual-telegram task. Denied tasks do not earn awards.
+Historical USD 0.072526 / USD 0.004835 awards, ledger credits and fractional remainders are preserved without recalculation. New one-cent awards add to the existing total; duplicate task awards remain blocked. No database migration is required.
 
-The user then requested more appealing wording, suggesting “73 cents or $0.073”. We explained these differ by a factor of ten: $0.073 = 7.3 cents, while 73 cents = $0.73. **The user decided to restructure referral pricing but has not specified new first-30-day or later USD amounts.** Existing code and balances still use the old amounts. Ask for the two new amounts before changing policy or historical awards. Do not backdate financial changes.
+Referral links use `/r/` plus an eight-character random code; old UUID links remain valid. Referrer can only be set at registration and cannot subsequently be changed.
 
 ## Exchange data and services
 
@@ -119,7 +119,7 @@ All **16 tests passed, 0 failures** on Node 24.21.0 in Windows. Includes auth/or
 
 ## Known limits and next steps
 
-1. Confirm the two revised referral USD amounts with the user; this is the latest unresolved feature request.
+1. Referral pricing is implemented as the approved flat USD 0.01 rate. The next migration prerequisite is the database choice below.
 2. Privately configure secrets and decide whether to transfer the live DB or deliberately use a separate empty development DB. Do not silently start with an empty DB and describe it as migration of live accounts.
 3. Run all tests in Cloud; verify current browser clipboard works on actual phone/HTTPS. The latest fix bundles clipboard handlers into app.js/profile.js so an older server missing a separate clipboard route cannot silently disable Copy. public/clipboard.js is also retained and tested; avoid editing one copy without updating bundled copies.
 4. Verify deployment/preview networking. Server is loopback-only, local Windows launcher does not run on a phone, and a Cloud coding environment is not automatically a persistent app host.
@@ -132,3 +132,13 @@ All **16 tests passed, 0 failures** on Node 24.21.0 in Windows. Includes auth/or
 ## Preserve-work instruction
 
 Never reset, delete, discard or roll back existing user work. Keep private state out of Git. Work on the current branch without force pushes. This handoff describes only TaskHarbor; unrelated local project mirrors/reference material were deliberately not uploaded.
+
+## Cloud continuation validation
+
+Cloud checkout began at main commit 83e939e. All original 16 tests passed on Node 24.19.0. The private live DB, backups and .env are absent; the user has not yet chosen a separate development database versus private live DB transfer. No normal app server was started against a new persistent database. Network/startup guidance was saved in the environment draft, pending user review/save and publication. Live fallback exchange access was blocked by proxy HTTP 403 before those settings were applied. Phone/HTTPS testing remains outstanding.
+
+The source manifest reflects pre-migration bytes: 18 files differ only by line endings, .gitignore has documented migration additions, and public/style.css has an unexplained original hash mismatch. Subsequent intentional feature changes also supersede those original hashes; do not overwrite files to force a manifest match.
+
+The flat-rate change updates community.js and referral UI wording, tests first/later awards, duplicate protection, historical fractional carry, and HTTP hold/final release behavior. Run the current full suite for its latest result.
+
+Task cards now label the selected-currency amount as “Reward:” and omit the visible internal task ID/provider line. The complete Cloud suite passes: 17 tests, 0 failures. No hosting target or deployment workflow is configured in this checkout; publishing source to GitHub alone does not establish a live website deployment.
