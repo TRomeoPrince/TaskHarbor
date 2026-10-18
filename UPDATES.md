@@ -1,3 +1,7 @@
+## 18 October 2026 — public welcome page
+
+Visitors now see a responsive welcome page with a brief introduction, illustrated workflow, and three-step explanation. Header Sign in and Sign up links open separate form modes; returning members enter their dashboard automatically. Referral codes from invitation links are retained in signup. Logout returns to the welcome page. The design uses local HTML/CSS/SVG without external assets or new application dependencies. Canva was unavailable, so the design was implemented directly. Existing accounts, task logic and financial policy are unchanged.
+
 ## 18 October 2026 — simplified task cards
 
 Task cards show “Reward:” followed by the amount in the selected display currency. Internal task IDs and provider names are no longer displayed on task cards.

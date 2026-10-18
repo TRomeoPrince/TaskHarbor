@@ -10,10 +10,27 @@ function fields(form){return Object.fromEntries(new FormData(form));}
 function button(action,id,label,decision=''){return `<button data-action="${action}" data-id="${esc(id)}" data-decision="${decision}">${label}</button>`;}
 async function readImages(input){const files=[...input.files];if(files.length>6)throw Error('Choose up to 6 images');return Promise.all(files.map(file=>{if(file.size>3*1024*1024)throw Error('Each image must be under 3 MB');return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({data:r.result.split(',')[1]});r.onerror=()=>reject(Error('Unable to read image'));r.readAsDataURL(file);});}));}
 function startLive(){if(events)return;events=new EventSource('/api/events');events.onopen=()=>{$('connection').textContent='● Live updates connected';act(load);};events.addEventListener('change',()=>act(load));events.onerror=()=>{$('connection').textContent='Reconnecting live updates…';};}
-$('login').onsubmit=e=>{e.preventDefault();act(async()=>{await api('login',fields(e.target));e.target.reset();await load();});};
+let authMode='sign-in';
+async function authenticate(form){await api(authMode==='sign-up'?'register':'login',fields(form));form.reset();await load();}
+function showGuestPage(){
+ const signup=location.hash==='#sign-up';authMode=signup?'sign-up':'sign-in';
+ const showAuth=signup||location.hash==='#sign-in';
+ $('landing').hidden=showAuth;$('auth').hidden=!showAuth;$('guest-nav').hidden=false;$('identity').hidden=true;
+ $('signup-username-label').hidden=!signup;$('signup-referral-label').hidden=!signup;
+ $('signup-username').disabled=!signup;$('signup-referral').disabled=!signup;
+ $('auth-title').textContent=signup?'Your next step starts here.':'Welcome back.';
+ $('auth-description').textContent=signup?'Create your free account and explore available tasks.':'Sign in to continue to your workspace.';
+ $('auth-password').autocomplete=signup?'new-password':'current-password';
+ $('register').hidden=!signup;$('sign-in-submit').hidden=signup;
+ $('auth-switch').innerHTML=signup?'Already a member? <a href="#sign-in">Sign in</a>':'New to TaskHarbor? <a href="#sign-up">Create an account</a>';
+ if(showAuth)$('auth-email').focus();
+}
+globalThis.addEventListener?.('hashchange',()=>{if(!state)showGuestPage();});
+showGuestPage();
+$('login').onsubmit=e=>{e.preventDefault();act(()=>authenticate(e.target));};
 $('signup-referral').value=new URLSearchParams(location.search).get('ref')||'';
-$('register').onclick=()=>act(async()=>{const form=$('login');if(!form.reportValidity())return;await api('register',fields(form));form.reset();await load();});
-$('logout').onclick=()=>act(async()=>{await api('logout',{});events?.close();location.reload();});
+$('register').onclick=()=>act(async()=>{const form=$('login');if(!form.reportValidity())return;await authenticate(form);});
+$('logout').onclick=()=>act(async()=>{await api('logout',{});events?.close();history.replaceState(null,'',location.pathname+location.search);location.reload();});
 $('refresh').onclick=()=>act(load);
 $('quick-create').onsubmit=async e=>{
  e.preventDefault();const form=e.target;if(!form.reportValidity())return;
@@ -77,7 +94,7 @@ function workflowMarkup(t,admin){
  return html;
 }
 function setHTML(id,html){if($(id).innerHTML!==html)$(id).innerHTML=html;}
-function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('main-nav').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
+function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('main-nav').hidden=false;$('guest-nav').hidden=true;$('landing').hidden=true;$('identity').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
  if(!admin&&s.profile?.preferred_currency)currency=s.profile.preferred_currency;
  if(admin||!(currency in s.currencies))currency='USD';$('currency').disabled=admin;
  const opts=Object.keys(s.currencies).sort().map(c=>`<option value="${c}">${c}${c!=='USD'&&!s.rates.some(r=>r.currency===c&&Date.now()-r.updated_at<7*86400000)?' — rate unavailable':''}</option>`).join('');setHTML('currency',opts);$('currency').value=currency;
@@ -98,7 +115,7 @@ function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('
  setHTML('withdrawals',s.withdrawals.map(w=>`<div class="row"><strong>${fmt(w.amount)} USD</strong> · ${esc(w.status)}<p>${w.settlement==='USD'?'USD payment':w.currency?'Legacy request — original local payout terms retained':'USD payment'}${w.currency?` · ${w.settlement==='USD'?'Estimated equivalent at request':'Original local amount'}: ${fmt(w.local_minor,w.currency,s.currencies[w.currency])} · Reference rate: ${w.rate/1000000} ${esc(w.currency)} / USD`:''}</p><p>${esc(w.email||'')} ${esc(w.destination)}</p><p>${esc(w.reference||'Awaiting processing')}</p><span class="id">${esc(w.id)}</span><br>${admin&&w.status==='requested'?button('payout',w.id,'Record payment','paid')+button('payout',w.id,'Reject & refund','rejected'):''}</div>`).join('')||'<p>No withdrawals yet.</p>');
  setHTML('transactions',s.transactions.map(t=>`<div class="row">${esc(t.kind)} <strong>${money(t.amount)}</strong> <span class="muted">(${fmt(t.amount)} recorded)</span> · ${esc(t.created_at)} UTC<div class="id">${esc(t.id)}</div></div>`).join('')||'<p>No transactions yet.</p>');
 }
-async function load(){if(loading){reload=true;return;}loading=true;try{state=await api('state');render();startLive();}catch(e){if(e.message==='Please log in'){events?.close();events=null;$('main-nav').hidden=true;$('auth').hidden=false;$('workspace').hidden=true;$('logout').hidden=true;}else throw e;}finally{loading=false;if(reload){reload=false;load().catch(e=>$('notice').textContent=e.message);}}}
+async function load(){if(loading){reload=true;return;}loading=true;try{state=await api('state');render();startLive();}catch(e){if(e.message==='Please log in'){events?.close();events=null;state=null;$('main-nav').hidden=true;showGuestPage();$('workspace').hidden=true;$('logout').hidden=true;}else throw e;}finally{loading=false;if(reload){reload=false;load().catch(e=>$('notice').textContent=e.message);}}}
 load().catch(e=>$('notice').textContent=e.message);
 
 // Referral copy controls are bundled into each page's main script.

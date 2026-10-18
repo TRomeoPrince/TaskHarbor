@@ -25,3 +25,23 @@ test('dashboard still renders and connects live updates with an older server res
  assert.doesNotMatch(get('referral-info').textContent,/Google|UGX 300|UGX 20/);
  vm.runInContext('state.wallet.available=0;render();',context);assert.match(get('withdraw-error').textContent,/No available balance/);
 });
+
+test('guest welcome, separate auth modes and referral code survive navigation',async()=>{
+ const elements=new Map();
+ const get=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',hidden:false,value:'',dataset:{},prepend(){},focus(){},querySelector(){return {}}});return elements.get(id);};
+ let onHashChange;
+ const context=vm.createContext({document:{getElementById:get,createElement(){return {querySelector(){return {}}};},addEventListener(){}},localStorage:{getItem(){return null;}},location:{search:'?ref=keep-this-code',hash:''},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(type,fn){if(type==='hashchange')onHashChange=fn;},fetch:async()=>({ok:false,json:async()=>({error:'Please log in'})}),console});
+ vm.runInContext(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),context);
+ await new Promise(resolve=>setTimeout(resolve,0));
+ assert.equal(get('landing').hidden,false);assert.equal(get('auth').hidden,true);assert.equal(get('workspace').hidden,true);
+ context.location.hash='#sign-up';onHashChange();
+ assert.equal(get('landing').hidden,true);assert.equal(get('auth').hidden,false);
+ assert.equal(get('register').hidden,false);assert.equal(get('sign-in-submit').hidden,true);
+ assert.equal(get('signup-referral').value,'keep-this-code');assert.equal(get('signup-referral').disabled,false);
+ assert.equal(get('auth-password').autocomplete,'new-password');
+ context.location.hash='#sign-in';onHashChange();
+ assert.equal(get('register').hidden,true);assert.equal(get('sign-in-submit').hidden,false);
+ assert.equal(get('signup-username').disabled,true);assert.equal(get('signup-referral').disabled,true);
+ assert.equal(get('auth-password').autocomplete,'current-password');
+ context.location.hash='';onHashChange();assert.equal(get('landing').hidden,false);assert.equal(get('auth').hidden,true);
+});
