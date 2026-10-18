@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {openStore,claim,expireClaims,wallet} from '../store.js';
+import {initialize,route} from '../features.js';
+import {registerProfile,provisionProfiles,awardReferral,maskDestination,payoutFeed,communityState,referralPolicy,shortReferral} from '../community.js';
+test('30-minute leases expire, prevent stale submissions and preserve submitted tasks',()=>{
+ const db=openStore(':memory:');initialize(db);
+ for(const id of ['a','b'])db.prepare("INSERT INTO users(id,email,password_hash,role) VALUES(?,?,?,'worker')").run(id,id+'@test','x');
+ db.prepare('INSERT INTO tasks(id,title,description,reward) VALUES(?,?,?,?)').run('t','Test','Instructions',12);
+ claim(db,'t','a');const expires=db.prepare('SELECT expires FROM leases').get().expires;
+ assert.equal(expireClaims(db,expires-1),0);assert.equal(expireClaims(db,expires),1);claim(db,'t','b');
+ assert.throws(()=>route(db,{id:'a',role:'worker'},'/api/submit',{taskId:'t',content:'Late'},{method:'POST'},{}));
+ route(db,{id:'b',role:'worker'},'/api/submit',{taskId:'t',content:'Submitted'},{method:'POST'},{});
+ assert.equal(expireClaims(db,expires+3600000),0);assert.equal(db.prepare('SELECT worker_id FROM tasks').get().worker_id,'b');db.close();
+});
+test('referral fractions accumulate once per account, month changes, and payout destinations never leak',()=>{
+ const db=openStore(':memory:');initialize(db);const now=Date.now();
+ for(const id of ['r','w'])db.prepare("INSERT INTO users(id,email,password_hash,role) VALUES(?,?,?,'worker')").run(id,id+'@test','x');
+ registerProfile(db,'r','referrer','',now);const code=db.prepare("SELECT referral_code FROM profiles WHERE user_id='r'").get().referral_code;
+ registerProfile(db,'w','worker',code,now);
+ const short=shortReferral(db,'r');assert.equal(short.length,8);assert.equal(shortReferral(db,'r'),short);
+ db.prepare("INSERT INTO users(id,email,password_hash,role) VALUES('new','new@test','x','worker')").run();registerProfile(db,'new','new_member',short,now);assert.equal(db.prepare("SELECT referrer_id FROM profiles WHERE user_id='new'").get().referrer_id,'r');
+ const create=id=>{db.prepare("INSERT INTO tasks(id,title,description,reward,status,worker_id,provider) VALUES(?,?,?,12,'approved','w','manual-telegram')").run(id,'Account','Task');return db.prepare('SELECT * FROM tasks WHERE id=?').get(id);};
+ const t=create('first');awardReferral(db,t,now);awardReferral(db,t,now);
+ assert.equal(wallet(db,'r').available,7);assert.equal(communityState(db,{id:'r'}).referrals.carryMicros,2526);
+ const later=create('later');awardReferral(db,later,now+30*86400000);assert.equal(communityState(db,{id:'r'}).referrals.totalMicros,referralPolicy.firstMicros+referralPolicy.laterMicros);
+ for(let i=0;i<5;i++)awardReferral(db,create('extra'+i),now+31*86400000);
+ assert.equal(wallet(db,'r').available,10);assert.equal(db.prepare('SELECT COUNT(*) n FROM referral_awards').get().n,7);
+ db.prepare("INSERT INTO withdrawals(id,user_id,amount,destination,status) VALUES('paid','w',12,'0781920398','paid')").run();
+ db.prepare("INSERT INTO withdrawals(id,user_id,amount,destination,status) VALUES('pending','w',1,'secret','requested')").run();
+ const feed=payoutFeed(db);assert.equal(feed.length,1);assert.equal(feed[0].username,'worker');assert.equal(feed[0].destination,'078xxxxxx398');assert.ok(!JSON.stringify(feed).includes('0781920398'));assert.ok(!JSON.stringify(feed).includes('w@test'));
+ assert.equal(maskDestination('user@example.com'),'uxxxx@example.com');assert.equal(maskDestination('abc'),'Hidden');
+ provisionProfiles(db);assert.equal(db.prepare('SELECT COUNT(*) n FROM profiles').get().n,3);db.close();
+});
