@@ -1,22 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { pool } from './postgres.js';
+import { transaction } from './postgres.js';
 
 const number = value => Number(value || 0);
 
 export async function atomic(fn) {
-  const client = await pool.connect();
-
-  try {
-    await client.query('BEGIN');
-    const result = await fn(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  return transaction(fn);
 }
 
 export async function wallet(db, id) {

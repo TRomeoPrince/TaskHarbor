@@ -109,9 +109,10 @@ const existingAdmin = await db.get(
 );
 
 if (!existingAdmin) {
-  const password =
-    process.env.ADMIN_PASSWORD ||
-    randomBytes(15).toString('base64url');
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password || password.length < 10) {
+    throw Error('Set ADMIN_PASSWORD (at least 10 characters) before initializing a new PostgreSQL admin');
+  }
 
   await db.run(
     `INSERT INTO users(

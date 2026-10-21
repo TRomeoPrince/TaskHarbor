@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  reward INTEGER NOT NULL CHECK(reward > 0),
+  reward BIGINT NOT NULL CHECK(reward > 0),
   status TEXT NOT NULL DEFAULT 'available'
     CHECK(status IN ('available','claimed','submitted','approved','rejected')),
   worker_id TEXT REFERENCES users(id),
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS submissions (
 CREATE TABLE IF NOT EXISTS withdrawals (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id),
-  amount INTEGER NOT NULL CHECK(amount > 0),
+  amount BIGINT NOT NULL CHECK(amount > 0),
   destination TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'requested'
     CHECK(status IN ('requested','paid','rejected')),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS ledger (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id),
   kind TEXT NOT NULL,
-  amount INTEGER NOT NULL,
+  amount BIGINT NOT NULL,
   task_id TEXT REFERENCES tasks(id),
   withdrawal_id TEXT REFERENCES withdrawals(id),
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS referral_awards (
 
 CREATE TABLE IF NOT EXISTS referral_transfers (
   user_id TEXT PRIMARY KEY REFERENCES users(id),
-  credited_cents INTEGER NOT NULL DEFAULT 0
+  credited_cents BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS paid_dates (
@@ -166,14 +166,14 @@ CREATE TABLE IF NOT EXISTS images (
 
 CREATE TABLE IF NOT EXISTS rates (
   currency TEXT PRIMARY KEY,
-  rate INTEGER NOT NULL,
+  rate BIGINT NOT NULL,
   updated_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS quotes (
   id TEXT PRIMARY KEY,
   user_id TEXT REFERENCES users(id),
-  usd_cents INTEGER NOT NULL,
+  usd_cents BIGINT NOT NULL,
   currency TEXT NOT NULL,
   local_minor BIGINT NOT NULL,
   rate BIGINT NOT NULL,

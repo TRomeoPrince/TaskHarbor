@@ -1,4 +1,4 @@
-import { pool } from './postgres.js';
+import { pool, transaction } from './postgres.js';
 
 function convertPlaceholders(sql) {
   let index = 0;
@@ -57,21 +57,5 @@ function makeDb(client) {
 export const postgresDb = makeDb(pool);
 
 export async function postgresAtomic(fn) {
-  const client = await pool.connect();
-  const db = makeDb(client);
-
-  try {
-    await client.query('BEGIN');
-
-    const result = await fn(db);
-
-    await client.query('COMMIT');
-
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  return transaction(client => fn(makeDb(client)));
 }
