@@ -141,29 +141,29 @@ const server=http.createServer(async(req,res)=>{
   }
 
   if(req.method==='GET'&&!path.startsWith('/api/')){
-   const file={
-    '/':'index.html',
-    '/app.js':'app.js',
-    '/style.css':'style.css',
-    '/payouts':'payouts.html',
-    '/payouts/':'payouts.html',
-    '/profile':'profile.html',
-    '/profile/':'profile.html',
-    '/profile.js':'profile.js',
-    '/clipboard.js':'clipboard.js',
-    '/payouts.js':'payouts.js'
-   }[path];
+  const file={
+  '/':'index.html',
+  '/app.js':'app.js',
+  '/style.css':'style.css',
+  '/payouts':'payouts.html',
+  '/payouts/':'payouts.html',
+  '/profile':'profile.html',
+  '/profile/':'profile.html',
+  '/profile.js':'profile.js',
+  '/clipboard.js':'clipboard.js',
+  '/payouts.js':'payouts.js',
+  '/preview.png':'preview.png'
+}[path];
 
    if(!file)fail('Not found',404);
 
    res.setHeader(
-    'Content-Type',
-    file.endsWith('js')
-     ?'text/javascript'
-     :file.endsWith('css')
-      ?'text/css'
-      :'text/html'
-   );
+  'Content-Type',
+  file.endsWith('js') ? 'text/javascript' :
+  file.endsWith('css') ? 'text/css' :
+  file.endsWith('png') ? 'image/png' :
+  'text/html'
+);
 
    return res.end(
     readFileSync(
