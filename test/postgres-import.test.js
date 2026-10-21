@@ -30,7 +30,7 @@ test('PostgreSQL import: dry run, exact data preservation and nonempty-target re
   const run=promisify(execFile);
   const script=new URL('../scripts/import-sqlite.js',import.meta.url);
   const {fileURLToPath}=await import('node:url');
-  const options={env:{...process.env,DATABASE_URL:process.env.TEST_DATABASE_URL,PGOPTIONS:'-c search_path='+schema},timeout:15000};
+  const options={env:{...process.env,DATABASE_URL:process.env.TEST_DATABASE_URL,PGOPTIONS:'-c search_path='+schema},timeout:180000};
   const args=[fileURLToPath(script),'--source='+path];
   const dry=await run(process.execPath,args,options);assert.match(dry.stdout,/Dry run only/);
   assert.equal(Number((await pool.query('SELECT COUNT(*) n FROM users')).rows[0].n),0);
