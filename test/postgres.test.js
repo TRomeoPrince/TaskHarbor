@@ -68,6 +68,28 @@ test('PostgreSQL: authentication, referrals, hold and final moderation', {skip: 
  const sub=await db.get('SELECT id FROM submissions WHERE task_id=?',task.id);
  assert.equal((await post('review',{id:sub.id,decision:'approved',note:'Checked'},admin.cookie)).status,200);
  assert.equal((await view()).wallet.held,12);assert.equal((await view()).wallet.available,50);
+ // Multiple claims stay independent, including while earlier work awaits review.
+ const multiIds=[];
+ for(const title of ['Multi A','Multi B','Multi C']){
+  const created=await post('tasks',{title,description:'Multiple claim regression',rewardAmount:'0.12'},admin.cookie);
+  assert.equal(created.status,200,JSON.stringify(created.data));
+  multiIds.push((await db.get('SELECT id FROM tasks WHERE title=?',title)).id);
+ }
+ const [taskA,taskB,taskC]=multiIds;
+ assert.equal((await post('claim',{taskId:taskA},worker.cookie)).status,200);
+ assert.equal((await post('claim',{taskId:taskB},worker.cookie)).status,200);
+ for(const taskId of [taskA,taskB])assert.equal((await db.get('SELECT status FROM tasks WHERE id=?',taskId)).status,'claimed');
+ assert.equal((await post('submit',{taskId:taskA,content:'Multi-task evidence'},worker.cookie)).status,200);
+ assert.equal((await post('claim',{taskId:taskC},worker.cookie)).status,200);
+ assert.equal((await db.get('SELECT status FROM tasks WHERE id=?',taskA)).status,'submitted');
+ const workerId=(await db.get("SELECT id FROM users WHERE email='worker@test.local'")).id;
+ for(const taskId of multiIds){
+  const duplicate=await post('claim',{taskId},referrer.cookie);
+  assert.equal(duplicate.status,400);assert.match(duplicate.data.error,/Task is no longer available/);
+  assert.equal((await post('claim',{taskId},worker.cookie)).status,400);
+  assert.equal((await db.get('SELECT worker_id FROM tasks WHERE id=?',taskId)).worker_id,workerId);
+  assert.equal((await db.get('SELECT worker_id FROM leases WHERE task_id=?',taskId)).worker_id,workerId);
+ }
  const blocked=await fetch(base+'/api/claim',{method:'POST',headers:{Origin:'https://untrusted.example',Cookie:worker.cookie,'Content-Type':'application/json'},body:JSON.stringify({taskId:id})});assert.equal(blocked.status,403);
  assert.equal((await fetch(base+'/api/state')).status,401);
  }finally{await reader?.cancel();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await pool.end();await setup.query('DROP SCHEMA '+schema+' CASCADE');await setup.end();}

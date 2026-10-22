@@ -116,20 +116,6 @@ export async function claim(taskId, userId) {
   return atomic(async db => {
     await expireInside(db);
 
-    const active = await db.query(`
-      SELECT id
-      FROM tasks
-      WHERE worker_id = $1
-        AND status IN ('claimed', 'submitted')
-      LIMIT 1
-    `, [userId]);
-
-    if (active.rows.length) {
-      throw new Error(
-        'You already have an active task. Wait until it is reviewed before claiming another.'
-      );
-    }
-
     const result = await db.query(`
       UPDATE tasks
       SET status = 'claimed',

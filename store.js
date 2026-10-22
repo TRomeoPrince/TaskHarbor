@@ -15,7 +15,6 @@ export function wallet(db, id) {
 export function claim(db, taskId, userId) {
  return atomic(db,()=>{
  expireInside(db);
- if(db.prepare("SELECT id FROM tasks WHERE worker_id=? AND status IN ('claimed','submitted') LIMIT 1").get(userId))throw new Error('You already have an active task. Wait until it is reviewed before claiming another.');
  const result=db.prepare("UPDATE tasks SET status='claimed',worker_id=? WHERE id=? AND status='available' AND worker_id IS NULL").run(userId,taskId);
  if(!result.changes) throw new Error('Task is no longer available');
  db.prepare('INSERT INTO leases VALUES(?,?,?) ON CONFLICT(task_id) DO UPDATE SET worker_id=excluded.worker_id,expires=excluded.expires').run(taskId,userId,Date.now()+30*60000);
