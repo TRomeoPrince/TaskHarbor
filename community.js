@@ -8,7 +8,7 @@ import {entry} from './store.js';
 export const referralPolicy={firstMicros:10000,laterMicros:10000,days:30};
 export function provisionProfiles(db){
  for(const u of db.prepare('SELECT id,created_at FROM users WHERE id NOT IN (SELECT user_id FROM profiles)').all())db.prepare('INSERT INTO profiles VALUES(?,?,?,?,?)').run(u.id,'worker-'+u.id.replaceAll('-','').slice(0,12),randomUUID(),null,Date.parse(u.created_at+'Z'));
- db.prepare("INSERT OR IGNORE INTO leases SELECT id,worker_id,? FROM tasks WHERE status='claimed'").run(Date.now()+30*60000);
+ db.prepare("INSERT OR IGNORE INTO leases SELECT t.id,t.worker_id,? FROM tasks t LEFT JOIN task_policies p ON p.task_id=t.id WHERE t.status='claimed' AND (p.task_id IS NULL OR (p.claim_minutes IS NOT NULL AND (p.start_mode='on_claim' OR p.supplied_at IS NOT NULL)))").run(Date.now()+30*60000);
  db.prepare("INSERT OR IGNORE INTO profile_settings(user_id,chosen_username) SELECT user_id,CASE WHEN username LIKE 'worker-%' OR username LIKE 'worker_%' THEN 0 ELSE 1 END FROM profiles").run();
 }
 export function registerProfile(db,userId,username,code,now=Date.now()){
