@@ -120,8 +120,6 @@ export async function claim(taskId, userId) {
     const now = Date.now();
     const policy = (await db.query('SELECT * FROM task_policies WHERE task_id=$1', [taskId])).rows[0];
     if (policy?.deadline_at != null && now >= Number(policy.deadline_at)) throw Error('The task deadline has passed');
-    const active = await db.query("SELECT id FROM tasks WHERE worker_id=$1 AND status IN ('claimed','submitted') LIMIT 1", [userId]);
-    if (active.rows.length) throw Error('You already have an active task. Wait until it is reviewed before claiming another.');
     const result = await db.query(`
       UPDATE tasks SET status='claimed',worker_id=$1
       WHERE id=$2 AND status='available' AND worker_id IS NULL
