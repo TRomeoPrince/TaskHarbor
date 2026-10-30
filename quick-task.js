@@ -1,5 +1,18 @@
 import {readFileSync} from 'node:fs';
+import {randomUUID} from 'node:crypto';
 export function quickTask(body){
+ if(body?.onDemand===true||body?.onDemand==='true'||body?.onDemand==='1'){
+ const minutes=Number(body.workMinutes??60);
+ if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)throw Error('Work duration must be 1–43200 minutes');
+ const task=JSON.parse(readFileSync(new URL('./templates/single-account.json',import.meta.url),'utf8'))[0];
+ task.title='CREATE GMAIL';
+ task.description='Gmail account creation task. Claim the task first. The admin will request fresh instructions from the source and privately release the supplied first name, last name, Gmail username, password, and date of birth. Your work timer starts only when the admin releases those details. Submit your completion evidence, then complete any later recovery-email, birthday-settings and sign-out instructions. Reward: USD 0.12, subject to the three-day hold and final approval. Do not begin before you receive the official details.';
+ task.rewardAmount='0.12';
+ task.externalId='gmail-slot:'+randomUUID();
+ task.fields=[];
+ task.policy={startMode:'admin_details',claimMinutes:minutes,expiryAction:'hold',publicDescription:true};
+ return task;
+ }
  const required=(value,label,max=254)=>{if(typeof value!=='string'||!value.trim()||value.length>max)throw Error('Enter '+label);return value.trim();};
  const first=required(body.firstName,'the first name',100);
  const email=required(body.email,'the supplied Gmail address (Username)').toLowerCase();

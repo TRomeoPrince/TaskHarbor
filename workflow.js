@@ -5,12 +5,31 @@ const fail=m=>{throw Error(m);};
 function note(v){if(typeof v!=='string'||!v.trim()||v.length>10000)fail('Enter a note or result');return v.trim();}
 export function history(db,task,actor,action,content,step=null){db.prepare('INSERT INTO evidence_history(id,task_id,step_id,actor_id,action,content) VALUES(?,?,?,?,?,?)').run(randomUUID(),task,step,actor,action,content);}
 export function workflow(db,user,path,body,upload){
- if(!['/api/review','/api/moderation','/api/correction','/api/resubmit'].includes(path))return null;
+ if(!['/api/review','/api/moderation','/api/correction','/api/resubmit','/api/compensate-provider-expired'].includes(path))return null;
  return atomic(db,()=>{
  const submission=path==='/api/review'?db.prepare('SELECT * FROM submissions WHERE id=?').get(body.id||''):db.prepare('SELECT * FROM submissions WHERE task_id=?').get(body.taskId||'');
  if(!submission||submission.status!=='pending')fail('Submission is closed or missing');
  const task=db.prepare('SELECT * FROM tasks WHERE id=?').get(submission.task_id);
  const m=db.prepare('SELECT * FROM moderation WHERE task_id=?').get(task.id);
+ if(path==='/api/compensate-provider-expired'){
+ if(user.role!=='admin')fail('Admin access required');
+ if(task.provider!=='manual-telegram')fail('This recovery action is reserved for expired Telegram-source tasks');
+ if(task.status!=='submitted'||m?.status==='hold'||m?.status==='released'||m?.status==='denied')fail('Task is not eligible for expired-provider compensation');
+ if(db.prepare("SELECT id FROM ledger WHERE task_id=? AND kind IN ('earning','compensation')").get(task.id))fail('Task has already been credited');
+ if(db.prepare('SELECT task_id FROM task_compensations WHERE task_id=?').get(task.id))fail('Task already compensated');
+ const reason=note(body.reason||body.content);
+ const message='The original Telegram-provider task expired before the remaining follow-up steps could be supplied. The provider has NOT approved this task. TaskHarbor is compensating you for the work you already submitted: USD '+(task.reward/100).toFixed(2)+'. This is a TaskHarbor-funded goodwill payment, not an upstream provider payment. '+reason;
+ // One atomic transaction closes the unfinishable task, preserves all submitted evidence, and credits the agreed reward exactly once.
+ db.prepare('INSERT INTO task_compensations(task_id,worker_id,admin_id,amount,reason) VALUES(?,?,?,?,?)').run(task.id,task.worker_id,user.id,task.reward,reason);
+ entry(db,task.worker_id,'compensation',task.reward,task.id);
+ db.prepare("UPDATE tasks SET status='rejected' WHERE id=?").run(task.id);
+ db.prepare("UPDATE submissions SET status='rejected',review_note=? WHERE id=?").run('Provider expired; compensated by TaskHarbor. '+reason,submission.id);
+ if(m)db.prepare("UPDATE moderation SET status='denied',note=? WHERE task_id=?").run('Provider expired; TaskHarbor compensation. '+reason,task.id);
+ db.prepare('DELETE FROM leases WHERE task_id=?').run(task.id);
+ db.prepare('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)').run(randomUUID(),task.id,user.id,message);
+ history(db,task.id,user.id,'provider_expired_compensation',message);
+ return {ok:true,amount:task.reward};
+ }
  if(path==='/api/resubmit'){
  if(user.role!=='worker'||task.worker_id!==user.id)fail('Worker access required');
  const correction=db.prepare('SELECT * FROM corrections WHERE task_id=? AND pending=1 AND step_id IS NULL').get(task.id);if(!correction)fail('No submission correction is requested');
