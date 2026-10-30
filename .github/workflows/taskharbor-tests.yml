@@ -1,0 +1,17 @@
+name: TaskHarbor regression tests
+on:
+  push:
+    branches:
+      - feature/per-task-timing-gmail-on-demand
+  pull_request:
+  workflow_dispatch:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run Node.js tests
+        run: npm test
