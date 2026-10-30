@@ -1,3 +1,4 @@
+import {contactRoute,notificationTick} from './contact-notifications.js';
 import './config.js';
 import { hash, verify } from './auth.js';
 import { profileRoute } from './profile-postgres.js';
@@ -31,6 +32,8 @@ import {
 } from './exchange-postgres.js';
 
 const db = postgresDb;
+const notificationTimer = setInterval(()=>notificationTick(db),30000);
+notificationTimer.unref();
 
 await provisionProfiles(db);
 await restoreCurrencies(db);
@@ -220,7 +223,10 @@ const server = http.createServer(
           '/profile.js': 'profile.js',
           '/clipboard.js': 'clipboard.js',
           '/payouts.js': 'payouts.js',
-          '/preview.png': 'preview.png'
+          '/preview.png': 'preview.png',
+          '/contact':'contact.html',
+          '/contact.js':'contact.js',
+          '/notifications-sw.js':'notifications-sw.js'
         }[path];
 
         if (!file) {
@@ -593,6 +599,13 @@ const server = http.createServer(
           );
 
           return;
+        }
+
+        const contactResult = await contactRoute(db,user,path,req.method==='GET'?Object.fromEntries(new URL(req.url,'http://localhost').searchParams):body,req.method);
+        if(contactResult!==null){
+          if(req.method==='POST')broadcast();
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(contactResult));
         }
 
         const featureResult =
