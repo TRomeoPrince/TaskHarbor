@@ -397,6 +397,8 @@ export async function enrich(
         );
     }
 
+    const policy = await db.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
+    const compensation = allowed ? await db.get('SELECT amount,reason,created_at FROM task_compensations WHERE task_id=?',task.id) : null;
     const lease =
       allowed
         ? await db.get(
@@ -480,6 +482,8 @@ export async function enrich(
 
     enrichedTasks.push({
       ...task,
+      policy,
+      compensation,
 
       followup_overdue:
         Boolean(
@@ -516,7 +520,7 @@ export async function enrich(
           : [],
 
       ...(
-        !allowed
+        !allowed && !policy?.public_description
           ? {
               description:
                 'Claim this task to view its private instructions.'
@@ -995,6 +999,46 @@ export async function route(
     );
   }
 
+  if(path==='/api/cancel-unfilled-claim')return postgresAtomic(async tx=>{
+    const task=await access(tx,user,text(body.taskId));
+    const policy=await tx.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
+    if(task.status!=='claimed'||policy?.start_mode!=='admin_details'||policy.supplied_at)error('Only unfilled Gmail claims can be released');
+    await tx.run("UPDATE tasks SET status='available',worker_id=NULL WHERE id=?",task.id);
+    await tx.run('DELETE FROM leases WHERE task_id=?',task.id);
+    return {ok:true};
+  });
+  if(path==='/api/extend-task-time')return postgresAtomic(async tx=>{
+    if(user.role!=='admin')error('Admin access required');
+    const task=await access(tx,user,text(body.taskId));
+    const policy=await tx.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
+    if(task.status!=='claimed'||policy?.start_mode!=='admin_details'||!policy.supplied_at)error('Task is not awaiting timed worker submission');
+    const minutes=Number(body.minutes);
+    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)error('Enter 1–43200 additional minutes');
+    const expires=Date.now()+minutes*60000;
+    const updated=await tx.run('UPDATE leases SET expires=? WHERE task_id=? AND worker_id=?',expires,task.id,task.worker_id);
+    if(!updated.changes)error('Active task timer not found');
+    await tx.run('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)',randomUUID(),task.id,user.id,'Your task work deadline has been extended by '+minutes+' minutes from now.');
+    return {ok:true,expiresAt:expires};
+  });
+  if(path==='/api/supply-gmail-details')return postgresAtomic(async tx=>{
+    if(user.role!=='admin')error('Admin access required');
+    const task=await access(tx,user,text(body.taskId));
+    const policy=await tx.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
+    if(task.provider!=='manual-telegram'||task.status!=='claimed'||!task.worker_id||policy?.start_mode!=='admin_details'||policy.supplied_at)error('This task is not awaiting Gmail account details');
+    const first=text(body.firstName,100),email=text(body.email,254).toLowerCase();
+    if(!/^[a-z0-9.]+(?:\\+[^\\s@]+)?@gmail\\.com$/.test(email))error('Enter the Gmail address supplied by the bot');
+    const password=text(body.password,256),last=body.lastName?.trim()||'No last name — Leave blank / empty';
+    if(last.length>200)error('Last name instruction is too long');
+    const minutes=Number(body.minutes??policy.claim_minutes);
+    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)error('Enter a task duration between 1 and 43200 minutes');
+    const fields=[{label:'First name',value:first,copy:true},{label:'Last name',value:last,copy:true},{label:'Gmail address (Username)',value:email,copy:true},{label:'Supplied password',value:password,copy:true},{label:'Date of birth',value:'19 May 2000',copy:true}];
+    await tx.run('UPDATE task_details SET fields=? WHERE task_id=?',JSON.stringify(fields),task.id);
+    const now=Date.now();
+    await tx.run('UPDATE task_policies SET supplied_at=?,claim_minutes=? WHERE task_id=?',now,minutes,task.id);
+    await tx.run('INSERT INTO leases(task_id,worker_id,expires) VALUES(?,?,?) ON CONFLICT(task_id) DO UPDATE SET worker_id=EXCLUDED.worker_id,expires=EXCLUDED.expires',task.id,task.worker_id,now+minutes*60000);
+    await tx.run('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)',randomUUID(),task.id,user.id,'Your account details are ready. Work time: '+minutes+' minutes from release. Follow the supplied instructions.');
+    return {ok:true,expiresAt:now+minutes*60000};
+  });
   if (
     path === '/api/tasks'
   ) {
@@ -1086,6 +1130,21 @@ export async function route(
               : null
           );
 
+          if(task.policy!==undefined){
+            const p=task.policy;
+            if(!p||typeof p!=='object'||Array.isArray(p))error('Invalid task policy');
+            const mode=p.startMode||'on_claim';
+            if(!['on_claim','admin_details'].includes(mode))error('Unsupported task start mode');
+            const value=p.claimMinutes===undefined?(mode==='admin_details'?60:30):p.claimMinutes;
+            const minutes=value===null?null:Number(value);
+            if(minutes!==null&&(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200))error('Claim minutes must be 1–43200 or null');
+            if(mode==='admin_details'&&minutes===null)error('Admin-released tasks need a work duration');
+            const deadline=p.deadlineAt?Date.parse(p.deadlineAt):null;
+            if(p.deadlineAt&&(!Number.isFinite(deadline)||deadline<=Date.now()))error('Task deadline must be a future date');
+            const behavior=mode==='admin_details'?'hold':(p.expiryAction||'recycle');
+            if(!['hold','recycle'].includes(behavior))error('Invalid expiry behavior');
+            await tx.run('INSERT INTO task_policies(task_id,start_mode,claim_minutes,deadline_at,expiry_action,public_description) VALUES(?,?,?,?,?,?)',id,mode,minutes,deadline,behavior,p.publicDescription?1:0);
+          }
           const fields =
             task.fields || [];
 
@@ -1236,6 +1295,13 @@ export async function route(
           );
         }
 
+        const policy=await tx.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
+        if(policy?.start_mode==='admin_details'&&!policy.supplied_at)error('Wait for the admin to supply your task details');
+        if(policy?.start_mode==='admin_details'&&policy.supplied_at){
+          const lease=await tx.get('SELECT expires FROM leases WHERE task_id=?',task.id);
+          if(!lease||Date.now()>Number(lease.expires))error('Your work time expired. Ask the admin to extend your deadline.');
+        }
+        if(policy?.deadline_at&&Date.now()>=Number(policy.deadline_at))error('The task submission deadline has passed');
         await tx.run(
           `
           INSERT INTO submissions(
