@@ -66,7 +66,7 @@ export async function provisionProfiles(db) {
     SELECT id,worker_id,?
     FROM tasks t
     LEFT JOIN task_policies p ON p.task_id=t.id
-    WHERE t.status='claimed' AND NOT (p.start_mode='admin_details' AND p.supplied_at IS NULL)
+    WHERE t.status='claimed' AND (p.task_id IS NULL OR p.start_mode<>'admin_details' OR p.supplied_at IS NOT NULL)
     ON CONFLICT(task_id) DO NOTHING
   `, Date.now() + 30 * 60000);
 
