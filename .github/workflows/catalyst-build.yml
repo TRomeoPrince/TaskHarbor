@@ -2,6 +2,8 @@ name: Catalyst deployment package
 on:
   push:
     branches: [feature/catalyst-task-workflows]
+  pull_request:
+    branches: [catalyst-neon-staging]
   workflow_dispatch:
 permissions:
   contents: read
@@ -10,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -20,11 +24,9 @@ jobs:
           mkdir -p /tmp/taskharbor-runtime
           git ls-files -z '*.js' '*.json' '*.sql' 'public/*' 'templates/*' | tar --null -T - -cf - | tar -xf - -C /tmp/taskharbor-runtime
           cp -R node_modules /tmp/taskharbor-runtime/
-          printf '%s\n' "$GITHUB_SHA" > /tmp/taskharbor-runtime/DEPLOYED_COMMIT.txt
-          cd /tmp/taskharbor-runtime
-          zip -qr "$GITHUB_WORKSPACE/taskharbor-catalyst.zip" .
+          git rev-parse HEAD > /tmp/taskharbor-runtime/DEPLOYED_COMMIT.txt
       - uses: actions/upload-artifact@v4
         with:
           name: taskharbor-catalyst
-          path: taskharbor-catalyst.zip
+          path: /tmp/taskharbor-runtime/
           retention-days: 7
