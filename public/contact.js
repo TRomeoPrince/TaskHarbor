@@ -7,17 +7,19 @@ const formData=f=>Object.fromEntries(new FormData(f));
 async function inbox(){const data=await api('notifications');$('alerts').innerHTML=data.notifications.length?data.notifications.map(n=>`<article><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><a href="${esc(n.url)}">Open</a> <button type="button" data-read="${esc(n.id)}" ${n.read_at?'disabled':''}>${n.read_at?'Read':'Mark read'}</button></article>`).join(''):'No notifications yet.';}
 async function load(){
  state=await api('contact');$('content').hidden=false;
- $('contacts').elements.phone.value=state.contacts.phone;$('contacts').elements.whatsapp.value=state.contacts.whatsapp;
+ $('contacts').elements.phone.value=state.contacts.phone;
  $('preferences').elements.email.checked=state.prefs.email_enabled;$('preferences').elements.push.checked=state.prefs.push_enabled;
  $('preferences').elements.email.disabled=!state.config.emailReady;$('preferences').elements.push.disabled=!state.config.pushReady;
  $('configuration').textContent=[!state.config.emailReady?'Email delivery is awaiting administrator setup.':'',!state.config.pushReady?'Push delivery is awaiting administrator setup.':''].filter(Boolean).join(' ');
  $('audience').textContent=state.user.role==='admin'?'Receive submission and support alerts.':'Receive new-task and support-reply alerts. You can turn either channel off anytime.';
  $('device-note').textContent='Push requires a supported browser and permission on each device. On iPhone or iPad, add TaskHarbor to your Home Screen and open it there first.';
  $('enable-push').disabled=!state.config.pushReady||!('serviceWorker' in navigator)||!('PushManager' in window);
- $('public-contacts').textContent=[state.config.supportEmail,state.config.supportPhone].filter(Boolean).join(' · ')||'Our support team can reply here in TaskHarbor.';
+ $('public-contacts').replaceChildren();
+ if(state.config.supportEmail){const email=document.createElement('a');email.href='mailto:'+state.config.supportEmail;email.textContent=state.config.supportEmail;$('public-contacts').append(email);}
+ if(state.config.supportTelegram){const telegram=document.createElement('a');telegram.href=state.config.supportTelegram;telegram.textContent=' · TaskHarbor Telegram channel';telegram.target='_blank';telegram.rel='noopener noreferrer';$('public-contacts').append(telegram);}
  $('threads').innerHTML=state.threads.map(t=>`<p><button type="button" data-thread="${esc(t.id)}">${esc(t.subject)} · ${esc(t.status)}</button>${state.user.role==='admin'?' '+esc(t.email):''}</p>`).join('')||'No conversations yet.';
  $('directory').hidden=state.user.role!=='admin';
- $('members').innerHTML=state.members.map(m=>`<article><strong>${esc(m.email)}</strong><p>Phone: ${esc(m.phone||'Not provided')} · WhatsApp: ${esc(m.whatsapp||'Not provided')}</p></article>`).join('')||'No saved contact numbers.';
+ $('members').innerHTML=state.members.map(m=>`<article><strong>${esc(m.email)}</strong><p>Phone: ${esc(m.phone||'Not provided')}</p></article>`).join('')||'No saved contact numbers.';
  await inbox();
 }
 async function conversation(id){

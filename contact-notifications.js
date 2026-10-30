@@ -10,7 +10,7 @@ export function notificationConfig(){return {
  pushReady:Boolean(process.env.VAPID_PUBLIC_KEY&&process.env.VAPID_PRIVATE_KEY&&process.env.VAPID_SUBJECT),
  emailReady:Boolean(process.env.SMTP_HOST&&process.env.MAIL_FROM),
  publicKey:process.env.VAPID_PUBLIC_KEY||'',
- supportEmail:process.env.SUPPORT_EMAIL||'',supportPhone:process.env.SUPPORT_PHONE||''
+ supportEmail:process.env.SUPPORT_EMAIL||'admin@taskharbor.cc.cd',supportTelegram:/^https:\/\/t\.me\/[a-zA-Z0-9_+\-]{5,100}$/.test(process.env.SUPPORT_TELEGRAM_URL||'')?process.env.SUPPORT_TELEGRAM_URL:''
 };}
 export function validateSubscription(value){
  if(!value||typeof value!=='object')throw Error('Invalid push subscription');
@@ -25,10 +25,10 @@ export async function contactRoute(db,user,path,body,method){
  if(!['/api/contact','/api/member-contacts','/api/support','/api/support-message','/api/support-status','/api/notification-preferences','/api/notification-confirm','/api/push-subscription','/api/push-unsubscribe','/api/notifications','/api/notification-read'].includes(path))return null;
  if(!user)throw Error('Please log in');
  if(path==='/api/contact'&&method==='GET'){
-  const contacts=await db.get('SELECT phone,whatsapp FROM member_contacts WHERE user_id=?',user.id)||{phone:'',whatsapp:''};
+  const contacts=await db.get('SELECT phone FROM member_contacts WHERE user_id=?',user.id)||{phone:''};
   const prefs=await db.get('SELECT email_enabled,push_enabled FROM notification_preferences WHERE user_id=?',user.id)||{email_enabled:false,push_enabled:false};
   const threads=user.role==='admin'?await db.all('SELECT t.*,u.email FROM support_threads t JOIN users u ON u.id=t.user_id ORDER BY t.updated_at DESC LIMIT 100'):await db.all('SELECT * FROM support_threads WHERE user_id=? ORDER BY updated_at DESC LIMIT 100',user.id);
-  const members=user.role==='admin'?await db.all('SELECT u.id,u.email,c.phone,c.whatsapp FROM users u JOIN member_contacts c ON c.user_id=u.id ORDER BY u.created_at DESC LIMIT 500'):[];
+  const members=user.role==='admin'?await db.all('SELECT u.id,u.email,c.phone FROM users u JOIN member_contacts c ON c.user_id=u.id ORDER BY u.created_at DESC LIMIT 500'):[];
   return {user,contacts,prefs,threads,members,config:notificationConfig()};
  }
  if(path==='/api/notifications'&&method==='GET')return {notifications:await db.all('SELECT id,title,body,url,read_at,created_at FROM notification_inbox WHERE user_id=? ORDER BY created_at DESC LIMIT 100',user.id)};
@@ -40,9 +40,9 @@ export async function contactRoute(db,user,path,body,method){
  if(method!=='POST')throw Error('Method not allowed');
  return postgresAtomic(async tx=>{
   if(path==='/api/member-contacts'){
-   const phone=clean(body.phone??'',32,true),whatsapp=clean(body.whatsapp??'',32,true);
-   if([phone,whatsapp].some(v=>v&&!/^\+?[0-9 ()-]{5,32}$/.test(v)))throw Error('Enter a valid phone or WhatsApp number');
-   await tx.run('INSERT INTO member_contacts(user_id,phone,whatsapp) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET phone=EXCLUDED.phone,whatsapp=EXCLUDED.whatsapp,updated_at=now()',user.id,phone,whatsapp);return {ok:true};
+   const phone=clean(body.phone??'',32,true);
+   if(phone&&!/^\+?[0-9 ()-]{5,32}$/.test(phone))throw Error('Enter a valid phone number');
+   await tx.run('INSERT INTO member_contacts(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=EXCLUDED.phone,updated_at=now()',user.id,phone);return {ok:true};
   }
   if(path==='/api/support'||path==='/api/support-message'){
    const content=clean(body.content,5000);let thread;

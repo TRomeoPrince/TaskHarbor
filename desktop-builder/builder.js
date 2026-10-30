@@ -1,5 +1,0 @@
-const form=document.getElementById('builder'),result=document.getElementById('result');
-function output(){if(!form.reportValidity())return null;return JSON.stringify(TaskBuilder.build(Object.fromEntries(new FormData(form))),null,2);}
-form.onsubmit=e=>{e.preventDefault();try{const data=output();if(!data)return;const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));const link=document.createElement('a');link.href=url;const id=(new FormData(form).get('sourceId')||'generated').replace(/[^a-z0-9_-]/gi,'_');link.download='task-'+id+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);result.textContent='JSON exported. Import this file into TaskHarbor.';}catch(e){result.textContent=e.message;}};
-document.getElementById('copy-json').onclick=async()=>{try{const data=output();if(!data)return;await navigator.clipboard.writeText(data);result.textContent='JSON copied.';}catch(e){result.textContent='Copy unavailable. Use Save JSON file instead.';}};
-form.onreset=()=>{result.textContent='';};

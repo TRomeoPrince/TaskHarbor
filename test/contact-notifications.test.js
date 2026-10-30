@@ -21,9 +21,10 @@ test('PostgreSQL: private contacts/support, opt-in delivery, deduplication and r
   await db.run('INSERT INTO notification_installation(id) VALUES(1) ON CONFLICT DO NOTHING');
   const admin={id:'admin',email:'admin@test.invalid',role:'admin'},worker={id:'worker',email:'worker@test.invalid',role:'worker'},other={id:'other',email:'other@test.invalid',role:'worker'};
   for(const u of [admin,worker,other])await db.run('INSERT INTO users(id,email,password_hash,role) VALUES(?,?,?,?)',u.id,u.email,'synthetic',u.role);
-  await contactRoute(db,worker,'/api/member-contacts',{phone:'+256 700 000000',whatsapp:''},'POST');
+  await contactRoute(db,worker,'/api/member-contacts',{phone:'+256 700 000000'},'POST');
   assert.equal((await contactRoute(db,other,'/api/contact',{},'GET')).contacts.phone,'');
-  assert.equal((await contactRoute(db,other,'/api/contact',{},'GET')).members.length,0);
+  const privateView=await contactRoute(db,other,'/api/contact',{},'GET');
+  assert.equal(privateView.members.length,0);assert.equal('whatsapp' in privateView.contacts,false);
   assert.equal((await contactRoute(db,admin,'/api/contact',{},'GET')).members.length,1);
   const thread=await contactRoute(db,worker,'/api/support',{subject:'A question',content:'Please help'},'POST');
   await assert.rejects(contactRoute(db,other,'/api/support',{threadId:thread.threadId},'GET'),/not found/);
