@@ -1,0 +1,30 @@
+name: Catalyst deployment package
+on:
+  push:
+    branches: [feature/catalyst-task-workflows]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --omit=dev
+      - name: Package runtime without private data
+        run: |
+          mkdir -p /tmp/taskharbor-runtime
+          git ls-files -z '*.js' '*.json' '*.sql' 'public/*' 'templates/*' | tar --null -T - -cf - | tar -xf - -C /tmp/taskharbor-runtime
+          cp -R node_modules /tmp/taskharbor-runtime/
+          printf '%s\n' "$GITHUB_SHA" > /tmp/taskharbor-runtime/DEPLOYED_COMMIT.txt
+          cd /tmp/taskharbor-runtime
+          zip -qr "$GITHUB_WORKSPACE/taskharbor-catalyst.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: taskharbor-catalyst
+          path: taskharbor-catalyst.zip
+          retention-days: 7
