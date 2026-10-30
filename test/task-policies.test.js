@@ -36,7 +36,7 @@ test('Gmail on-demand slot waits for an administrator and starts its timer upon 
  assert.equal(state(other).tasks.length,0);
  assert.throws(()=>post(admin,'supply-gmail-details',{taskId:id,firstName:'Try again',email:'example@gmail.com',password:'A'}),/not awaiting/);
  assert.equal(expireClaims(db,before+100*60000),0,'private account-creation tasks must not automatically recycle after release');
- assert.equal(db.prepare('SELECT worker_id FROM tasks WHERE id=?').get(id),undefined);
+ assert.equal(db.prepare('SELECT worker_id FROM tasks WHERE id=?').get(id).worker_id,member.id);
  db.close();
 });
 
