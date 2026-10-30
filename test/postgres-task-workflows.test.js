@@ -38,6 +38,9 @@ test('PostgreSQL: delayed Gmail instructions and admin compensation for expired 
   assert.equal((await post('claim',{taskId:task.id},worker.cookie)).status,200);
   const waiting=(await state(worker.cookie)).tasks.find(t=>t.id===task.id);
   assert.equal(waiting.claim_expires,null);
+  assert.equal(waiting.assignee,null,'Members do not receive the admin contact directory');
+  const adminTask=(await state(admin.cookie)).tasks.find(t=>t.id===task.id);
+  assert.equal(adminTask.assignee.email,'worker@test.local');
   assert.equal((await post('submit',{taskId:task.id,content:'Too soon'},worker.cookie)).status,400);
   const release=await post('supply-gmail-details',{taskId:task.id,firstName:'Example',lastName:'',email:'example@gmail.com',password:'SyntheticOnlyPassword',minutes:60},admin.cookie);
   assert.equal(release.status,200,JSON.stringify(release.data));

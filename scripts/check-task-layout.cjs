@@ -37,11 +37,22 @@ const server=createServer(async(req,res)=>{
     await page.getByRole('link',{name:'Back to tasks'}).click();await page.locator('#view-tasks').waitFor({state:'visible'});
     await page.locator('#tasks .task-row').first().click();await page.locator('#task-detail').waitFor({state:'visible'});
     if(currentRole==='worker'){
+     await page.getByRole('button',{name:'Report progress',exact:true}).click();
+     assert.ok((await page.locator('#action-value').inputValue()).startsWith('Progress update:'));
+     await page.keyboard.press('Escape');
      await page.getByRole('button',{name:'Submit result',exact:true}).click();assert.equal(await page.locator('dialog.action-panel').isVisible(),true);
      await page.locator('#action-value').fill('Preserve this draft');await page.evaluate(()=>render());assert.equal(await page.locator('#action-value').inputValue(),'Preserve this draft');
      await page.keyboard.press('Escape');assert.equal(await page.locator('dialog.action-panel').isVisible(),false);
      await page.getByRole('link',{name:'My work',exact:true}).click();await page.locator('#view-tasks').waitFor({state:'visible'});assert.equal(await page.locator('#tasks .task-row').count(),1);
     }else{
+     await page.getByRole('link',{name:'Member progress',exact:true}).click();await page.locator('#view-progress').waitFor({state:'visible'});
+     assert.ok((await page.locator('#progress-members').innerText()).includes('task slots'));
+     await page.evaluate(()=>{state.tasks[1].status='claimed';state.tasks[1].worker_id='fixture-worker';state.tasks[1].assignee={email:'worker@example.test',username:'Builder'};state.tasks[1].messages=[{role:'worker',content:'Progress update: Historical 2/2, new 3/8, English 0/5',created_at:new Date().toISOString()}];render();});
+     assert.ok((await page.locator('#progress-rows').innerText()).includes('Builder'));
+     await page.getByRole('button',{name:'Request update',exact:true}).click();assert.equal(await page.locator('dialog.action-panel').isVisible(),true);await page.keyboard.press('Escape');
+     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Progress rows fit mobile and desktop');
+     await page.screenshot({path:out+'/admin-'+size.name+'-progress.png',fullPage:true});
+     await page.getByRole('link',{name:'Open work & evidence',exact:false}).click();await page.locator('#task-detail').waitFor({state:'visible'});await page.getByRole('link',{name:'Back to member progress',exact:false}).click();await page.locator('#view-progress').waitFor({state:'visible'});
      await page.getByRole('link',{name:'Create tasks',exact:true}).click();await page.locator('#admin').waitFor({state:'visible'});
      await page.getByRole('link',{name:'Submissions',exact:true}).click();await page.locator('#view-submissions').waitFor({state:'visible'});assert.equal(await page.locator('#submissions .task-row').count(),1);
      await page.locator('#submissions .task-row').click();await page.getByText('Synthetic submission evidence',{exact:true}).waitFor();assert.ok((await page.locator('#task-detail').innerText()).includes('Synthetic submission evidence'));

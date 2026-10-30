@@ -480,8 +480,12 @@ export async function enrich(
           )
         : [];
 
+    const assignee = user.role === 'admin' && task.worker_id
+      ? await db.get('SELECT u.id,u.email,p.username FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id=?',task.worker_id)
+      : null;
     enrichedTasks.push({
       ...task,
+      assignee,
       policy,
       compensation,
 

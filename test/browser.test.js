@@ -72,5 +72,13 @@ test('compact task browsing preserves navigation, private instructions and revie
  context.location.hash='#submissions';listeners.get('hashchange')();assert.match(get('submissions').innerHTML,/Review submission/);assert.doesNotMatch(get('submissions').innerHTML,/synthetic proof/);
  context.location.hash='#task/gmail-1';listeners.get('hashchange')();assert.match(get('task-detail').innerHTML,/synthetic proof/);assert.match(get('task-detail').innerHTML,/Start 3-day hold/);assert.match(get('task-detail').innerHTML,/Compensate: expired at source/);
  vm.runInContext("openAction('correction','gmail-1','');",context);get('action-value').value='Keep this draft';vm.runInContext('render();',context);assert.equal(get('action-value').value,'Keep this draft');assert.notEqual(vm.runInContext('pendingAction',context),null);
+ context.location.hash='#progress';listeners.get('hashchange')();
+ assert.equal(get('view-progress').hidden,false);assert.equal(get('view-tasks').hidden,true);assert.equal(get('progress-nav').hidden,false);
+ assert.match(get('progress-counts').innerHTML,/Claimed slots/);assert.match(get('progress-members').textContent,/task slots/);
+ vm.runInContext("state.tasks[1].status='claimed';state.tasks[1].worker_id='other';state.tasks[1].assignee={email:'other@test',username:'Builder'};state.tasks[1].messages=[{role:'worker',content:'Progress update: Historical 2/2, new 3/8, English 0/5',created_at:'2026-10-30T12:00:00Z'}];render();",context);
+ assert.match(get('progress-rows').innerHTML,/Builder/);assert.match(get('progress-rows').innerHTML,/In progress · member reported/);assert.match(get('progress-rows').innerHTML,/new 3\/8/);assert.match(get('progress-rows').innerHTML,/Request update/);
+ vm.runInContext("state.user.role='worker';renderWorkspace();",context);assert.equal(get('view-progress').hidden,true);assert.equal(get('progress-nav').hidden,true);
+ context.location.hash='#task/gmail-1';listeners.get('hashchange')();assert.match(get('task-detail').innerHTML,/Report progress/);
+ vm.runInContext("state.user.role='admin';",context);
  context.location.hash='#create';listeners.get('hashchange')();assert.equal(get('admin').hidden,false);assert.equal(get('view-submissions').hidden,true);
 });
