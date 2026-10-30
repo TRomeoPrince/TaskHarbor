@@ -1,0 +1,31 @@
+name: Task dashboard browser checks
+on:
+  push:
+    branches: [feature/task-list-navigation]
+  pull_request:
+    branches: [feature/contact-notifications]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/taskharbor-browser" --no-package-lock playwright@1.56.1
+          node "$RUNNER_TEMP/taskharbor-browser/node_modules/playwright/cli.js" install --with-deps chromium --only-shell
+      - name: Test task layouts with synthetic fixtures
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/taskharbor-browser/node_modules/playwright
+          UI_SCREENSHOT_DIR: ${{ runner.temp }}/taskharbor-layout
+        run: node scripts/check-task-layout.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: taskharbor-task-layout
+          path: ${{ runner.temp }}/taskharbor-layout/
+          retention-days: 7

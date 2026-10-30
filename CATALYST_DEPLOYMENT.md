@@ -128,3 +128,21 @@ The worker scans every 30 seconds independently of publish/submit requests. Sour
 Before rollout, run PostgreSQL CI, check member-to-member privacy and admin support replies, then test opt-in, confirmation, push delivery on phone/PC, opt-out and delivery failures against approved test accounts. Do not enable email/push for existing members automatically. Do not backfill historical alerts or subscribe the administrator's browser without their action. New notification links target the relevant task card/support conversation, whose normal authorization remains in force.
 
 ImprovMX receiving: configure the domain MX records for mx1.improvmx.com (10) and mx2.improvmx.com (20), plus its SPF include. Forwarding is separate from app notification sending. The ImprovMX Free plan has no SMTP sends; do not configure a forwarding alias as an SMTP login. An authorized sending service/account is still required. Telegram channel creation and its final link must be verified in the owner account before setting SUPPORT_TELEGRAM_URL.
+
+## Compact task browsing and navigation
+
+`feature/task-list-navigation` reorganizes both dashboards into one vertical list of compact task rows. Each row shows the title, short safe summary, status and reward. Opening a task shows an overview and expandable public requirements before claiming; assigned private fields, follow-up instructions, messages, evidence and admin review controls are shown in the focused detail view. Existing server authorization still determines which private fields and images are returned.
+
+Workspace links separate Browse tasks, My work, Submissions, Wallet, Referrals and admin Create tasks. Hash routes support browser Back/Forward and notification deep links. Search and status filters narrow the task list. Balances are collapsed by default; the wallet view expands them. Action forms use a native dialog so a task button does not scroll to a remote form at the top of a long page. Live state refreshes preserve an open action form's draft.
+
+This update does not change task assignment, reward amounts, hold rules, wallets, referrals or payment APIs. It requires no additional schema migration beyond the contacts branch's existing migration. The newest contacts branch snapshot contained only five files; the UI branch restores missing application files from tested commit `7acc969` while preserving the newer email/Telegram support settings.
+
+Validation: `npm test` includes task-list/detail navigation tests with synthetic member/admin data. `scripts/check-task-layout.cjs` uses an isolated static fixture server and Playwright to check desktop/390px layouts, list spacing and overflow, overview-before-claim, Back/Forward, admin review, modal behavior and draft preservation. It never connects to a production database. Screenshots from CI are published as the `taskharbor-task-layout` workflow artifact.
+
+## Compact navigation and member progress (PR #4)
+
+Task browsing is a compact vertical list for both roles, with a brief overview before claiming. The admin-only **Member progress** view distinguishes available/claimed slots, submissions awaiting verification, approved work and rejected/compensated work. It shows the assigned member and latest explicitly labelled member progress report, with links to the task/evidence and a Request update action. It counts task slots separately from unique assigned members; a claimed slot is never treated as a completed contribution.
+
+Assigned members can use **Report progress** within their task. FaceAtlas prompts for historical videos (2), new-setting videos (8), English-speaking videos (5), portal status and blockers. These are text self-reports stored in the existing authorized task message history. They neither submit/approve the task nor change balances, deadlines or claim ownership. Follow-up step counts are shown only when configured. Provider approval remains an independent manual check. No percentage is invented for tasks with no structured milestones.
+
+This addition has no schema migration. Admin-only assignee details are omitted from member responses. Progress reports do not collect recordings, passwords or identity documents. Existing API authorization still limits task messages/evidence to the assigned member and administrators. It does not create extra opportunity slots or clear existing claims automatically.
