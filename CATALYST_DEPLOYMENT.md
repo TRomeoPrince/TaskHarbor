@@ -90,3 +90,20 @@ References:
 - https://docs.catalyst.zoho.com/en/serverless/help/appsail/catalyst-managed-runtimes/key-concepts/
 - https://docs.catalyst.zoho.com/en/serverless/help/appsail/appsail-configurations/
 - https://neon.com/docs/get-started-with-neon/workflow-primer
+
+## Optional task-workflow and compensation update (October 30, 2026)
+
+This feature is developed separately on `feature/catalyst-task-workflows`.
+It introduces **two additive PostgreSQL tables**, `task_policies` and `task_compensations`, without changing existing task or wallet records. Old tasks retain their legacy timing behavior.
+
+**Before updating a running deployment:**
+
+1. Confirm which server and database actually serve `taskharbor.cc.cd`. Never assume the SQLite and Neon deployments share data.
+2. Create and independently verify a consistent backup of the **actual live database**, including identities, evidence, wallet, referral and payout entries. Keep the old running code available for rollback.
+3. On a separate **non-production Neon staging database**, run `npm ci` and `npm run db:schema -- --apply` to create the two new tables, then run `npm test` with `TEST_DATABASE_URL` pointed at a disposable database. Use the isolated GitHub Actions PostgreSQL CI as an additional check.
+4. Reconcile staging records/balances and complete manual end-to-end checks for Gmail claim, delayed detail release, adjustable work time, and compensation.
+5. When approving production rollout, back up production again, apply the **additive schema migration first**, and then deploy the matching `server-postgres.js` build. Do not deploy the new app before the tables exist, or start a second writer against a diverging database.
+6. Have the administrator review old expired Telegram-source submissions individually. **Do not bulk-credit users automatically.** The new admin action credits the original task reward exactly once as a **TaskHarbor-funded compensation**, not provider approval; it bypasses the standard 72-hour hold, does **not** issue referral bonuses, preserves submission history, closes the task, and records a notice. The admin must confirm that the original provider task expired and the member already performed work.
+7. TaskHarbor's operational USD ledger is not a payment gateway; actual mobile-money/airtime settlement remains manual.
+
+The separate VeTella FaceAtlas project has its **own** external approval, minimum-ten-contributions and payment conditions. Do not use Telegram-source compensation to override them. Task-specific deadline settings do not themselves implement a multi-contributor listing or automatic contractor reconciliation.

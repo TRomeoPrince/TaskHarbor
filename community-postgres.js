@@ -64,8 +64,9 @@ export async function provisionProfiles(db) {
   await db.run(`
     INSERT INTO leases(task_id,worker_id,expires)
     SELECT id,worker_id,?
-    FROM tasks
-    WHERE status='claimed'
+    FROM tasks t
+    LEFT JOIN task_policies p ON p.task_id=t.id
+    WHERE t.status='claimed' AND (p.task_id IS NULL OR (p.claim_minutes IS NOT NULL AND (p.start_mode='on_claim' OR p.supplied_at IS NOT NULL)))
     ON CONFLICT(task_id) DO NOTHING
   `, Date.now() + 30 * 60000);
 

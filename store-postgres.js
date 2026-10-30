@@ -14,7 +14,7 @@ export async function wallet(db, id) {
       COALESCE(
         SUM(
           CASE
-            WHEN kind IN ('earning', 'referral') THEN amount
+            WHEN kind IN ('earning', 'referral', 'compensation') THEN amount
             ELSE 0
           END
         ),
@@ -65,8 +65,10 @@ async function expireInside(db, now = Date.now()) {
     SELECT t.id, t.worker_id
     FROM tasks t
     JOIN leases l ON l.task_id = t.id
+    LEFT JOIN task_policies p ON p.task_id = t.id
     WHERE t.status = 'claimed'
       AND l.expires <= $1
+      AND COALESCE(p.expiry_action,'recycle')='recycle'
       AND NOT EXISTS (
         SELECT 1
         FROM submissions s
@@ -101,7 +103,7 @@ async function expireInside(db, now = Date.now()) {
       task.id,
       task.worker_id,
       'claim_expired',
-      'Unsubmitted claim returned after 30 minutes'
+      'Unsubmitted claim returned after the configured claim time'
     ]);
   }
 
@@ -115,33 +117,21 @@ export async function expireClaims(now = Date.now()) {
 export async function claim(taskId, userId) {
   return atomic(async db => {
     await expireInside(db);
-
+    const now = Date.now();
+    const policy = (await db.query('SELECT * FROM task_policies WHERE task_id=$1', [taskId])).rows[0];
+    if (policy?.deadline_at != null && now >= Number(policy.deadline_at)) throw Error('The task deadline has passed');
     const result = await db.query(`
-      UPDATE tasks
-      SET status = 'claimed',
-          worker_id = $1
-      WHERE id = $2
-        AND status = 'available'
-        AND worker_id IS NULL
+      UPDATE tasks SET status='claimed',worker_id=$1
+      WHERE id=$2 AND status='available' AND worker_id IS NULL
       RETURNING id
     `, [userId, taskId]);
-
-    if (!result.rows.length) {
-      throw new Error('Task is no longer available');
-    }
-
-    await db.query(`
-      INSERT INTO leases(task_id, worker_id, expires)
-      VALUES($1, $2, $3)
-      ON CONFLICT(task_id)
-      DO UPDATE SET
-        worker_id = EXCLUDED.worker_id,
-        expires = EXCLUDED.expires
-    `, [
-      taskId,
-      userId,
-      Date.now() + 30 * 60000
-    ]);
+    if (!result.rows.length) throw Error('Task is no longer available');
+    const minutes = policy ? policy.claim_minutes : 30;
+    const expires = policy?.start_mode==='admin_details'||minutes===null ? null : now + Number(minutes)*60000;
+    if (expires!==null) await db.query(`
+      INSERT INTO leases(task_id,worker_id,expires) VALUES($1,$2,$3)
+      ON CONFLICT(task_id) DO UPDATE SET worker_id=EXCLUDED.worker_id,expires=EXCLUDED.expires
+    `, [taskId,userId,policy?.deadline_at!=null?Math.min(expires,Number(policy.deadline_at)):expires]);
   });
 }
 
