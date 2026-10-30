@@ -82,7 +82,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');
  if(action==='copy'){act(async()=>{const t=state.tasks.find(t=>t.id===id);const value=t.fields[Number(decision)].value;try{await navigator.clipboard.writeText(value);}catch{const temp=document.createElement('textarea');temp.value=value;document.body.append(temp);temp.select();const copied=document.execCommand('copy');temp.remove();if(!copied)throw Error('Copy unavailable; select the value to copy it.');}b.textContent='Copied';setTimeout(()=>{if(b.isConnected)b.textContent='Copy';},1600);});return;}
  if(action==='claim'){act(async()=>{await api('claim',{taskId:id});await load();});return;}
  if(action==='cancel-unfilled'){act(async()=>{await api('cancel-unfilled-claim',{taskId:id});await load();});return;}
- const t=action==='step'?state.tasks.find(t=>t.id===decision):null;openAction(action,id,decision,t?.steps.find(s=>s.id===id)?.instruction||'');
+ const t=action==='step'?state.tasks.find(t=>t.id===decision):null;const credited=action==='compensate-expired'?state.tasks.find(t=>t.id===id):null;openAction(action,id,decision,credited?`This closes the submitted task and adds USD ${(credited.reward/100).toFixed(2)} to the member's available balance as TaskHarbor-funded compensation. The Telegram provider did NOT approve the task. Use only after verifying the source expired; the action cannot be repeated.`:t?.steps.find(s=>s.id===id)?.instruction||'');
 });
 function images(t,kind){return t.images.filter(i=>!kind||i.kind===kind).map(i=>`<a href="/api/images/${esc(i.id)}" target="_blank" rel="noopener"><img class="attachment" src="/api/images/${esc(i.id)}" alt="${esc(i.kind)} image" loading="lazy"></a>`).join('');}
 function workflowMarkup(t,admin){
