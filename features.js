@@ -44,10 +44,11 @@ export function enrich(db,user,state){
  state.tasks=state.tasks.map(t=>{
  const allowed=user.role==='admin'||t.worker_id===user.id;
  const steps=db.prepare('SELECT * FROM task_steps WHERE task_id=? ORDER BY position').all(t.id);
+ const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(t.id)||null;
  const shown=steps.find(s=>!s.completed)?.position;
  const visible=s=>allowed&&(user.role==='admin'||t.status!=='claimed'&&(s.completed||s.position===shown));
  const attachments=allowed?db.prepare('SELECT id,kind FROM images WHERE task_id=?').all(t.id).filter(img=>!img.kind.startsWith('instruction:')||steps.some(s=>img.kind==='instruction:'+s.id&&visible(s))):[];
- return {...t,followup_overdue:allowed&&t.status==='submitted'&&shown!==undefined&&(db.prepare('SELECT expires FROM leases WHERE task_id=?').get(t.id)?.expires||Infinity)<=Date.now(),claim_expires:allowed?db.prepare('SELECT expires FROM leases WHERE task_id=?').get(t.id)?.expires:null,moderation:allowed?db.prepare('SELECT * FROM moderation WHERE task_id=?').get(t.id):null,correction:allowed?db.prepare('SELECT * FROM corrections WHERE task_id=? AND pending=1').get(t.id):null,history:allowed?db.prepare('SELECT * FROM evidence_history WHERE task_id=? ORDER BY rowid').all(t.id):[],...(!allowed?{description:'Claim this task to view its private instructions.'}:{}),fields:allowed?JSON.parse(db.prepare('SELECT fields FROM task_details WHERE task_id=?').get(t.id)?.fields||'[]'):[],steps:steps.map(s=>({...s,instruction:visible(s)?s.instruction:'',evidence:allowed?s.evidence:null})),images:attachments,messages:allowed?db.prepare('SELECT m.*,u.role FROM messages m JOIN users u ON u.id=m.sender_id WHERE task_id=? ORDER BY m.created_at,m.rowid').all(t.id):[]};
+ return {...t,policy,followup_overdue:allowed&&t.status==='submitted'&&shown!==undefined&&(db.prepare('SELECT expires FROM leases WHERE task_id=?').get(t.id)?.expires||Infinity)<=Date.now(),claim_expires:allowed?db.prepare('SELECT expires FROM leases WHERE task_id=?').get(t.id)?.expires:null,moderation:allowed?db.prepare('SELECT * FROM moderation WHERE task_id=?').get(t.id):null,correction:allowed?db.prepare('SELECT * FROM corrections WHERE task_id=? AND pending=1').get(t.id):null,history:allowed?db.prepare('SELECT * FROM evidence_history WHERE task_id=? ORDER BY rowid').all(t.id):[],...(!allowed&&!policy?.public_description?{description:'Claim this task to view its private instructions.'}:{}),fields:allowed?JSON.parse(db.prepare('SELECT fields FROM task_details WHERE task_id=?').get(t.id)?.fields||'[]'):[],steps:steps.map(s=>({...s,instruction:visible(s)?s.instruction:'',evidence:allowed?s.evidence:null})),images:attachments,messages:allowed?db.prepare('SELECT m.*,u.role FROM messages m JOIN users u ON u.id=m.sender_id WHERE task_id=? ORDER BY m.created_at,m.rowid').all(t.id):[]};
  });
  state.withdrawals=state.withdrawals.map(w=>({...w,...db.prepare('SELECT currency,local_minor,rate,rate_time,fee_minor,settlement FROM withdrawal_details WHERE withdrawal_id=?').get(w.id)}));return state;
 }
@@ -91,11 +92,45 @@ export function route(db,user,path,body,req,res){
  const updated=db.prepare("UPDATE task_steps SET instruction=? WHERE id=? AND task_id=? AND completed=0 AND instruction='' ").run(instruction,text(body.id),task.id);
  if(!updated.changes)error('Step already supplied, completed, or missing');return {ok:true};
  });
+ if(path==='/api/supply-gmail-details')return atomic(db,()=>{
+ if(user.role!=='admin')error('Admin access required');
+ const task=access(db,user,text(body.taskId));
+ const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(task.id);
+ if(task.provider!=='manual-telegram'||task.status!=='claimed'||!task.worker_id||policy?.start_mode!=='admin_details'||policy.supplied_at)error('This task is not awaiting Gmail account details');
+ const first=text(body.firstName,100),email=text(body.email,254).toLowerCase();
+ if(!/^[a-z0-9.]+(?:\+[^\s@]+)?@gmail\.com$/.test(email))error('Enter the Gmail address supplied by the bot');
+ const password=text(body.password,256),last=body.lastName?.trim()||'No last name — Leave blank / empty';
+ if(last.length>200)error('Last name instruction is too long');
+ const minutes=Number(body.minutes??policy.claim_minutes);
+ if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)error('Enter a task duration between 1 and 43200 minutes');
+ const fields=[{label:'First name',value:first,copy:true},{label:'Last name',value:last,copy:true},{label:'Gmail address (Username)',value:email,copy:true},{label:'Supplied password',value:password,copy:true},{label:'Date of birth',value:'19 May 2000',copy:true}];
+ db.prepare('UPDATE task_details SET fields=? WHERE task_id=?').run(JSON.stringify(fields),task.id);
+ const now=Date.now();
+ db.prepare('UPDATE task_policies SET supplied_at=?,claim_minutes=? WHERE task_id=?').run(now,minutes,task.id);
+ db.prepare('INSERT INTO leases VALUES(?,?,?) ON CONFLICT(task_id) DO UPDATE SET worker_id=excluded.worker_id,expires=excluded.expires').run(task.id,task.worker_id,now+minutes*60000);
+ db.prepare('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)').run(randomUUID(),task.id,user.id,'Your account details are ready. Work time: '+minutes+' minutes from release. Follow the supplied instructions.');
+ return {ok:true,expiresAt:now+minutes*60000};
+ });
  if(path==='/api/tasks'){
  if(user.role!=='admin')error('Admin access required');return atomic(db,()=>{
  const tasks=body.tasks||[body];if(!Array.isArray(tasks)||!tasks.length||tasks.length>100)error('Import 1–100 tasks');
  for(const t of tasks){const id=randomUUID();const reward=t.rewardAmount!==undefined?minor(t.rewardAmount):t.reward;if(!Number.isSafeInteger(reward)||reward<=0||reward>100000000)error('Invalid reward');
  db.prepare('INSERT INTO tasks(id,title,description,reward,provider,external_id) VALUES(?,?,?,?,?,?)').run(id,text(t.title,200),text(t.description),reward,t.provider?text(t.provider,100):'manual',t.externalId?text(t.externalId,200):null);
+ if(t.policy!==undefined){
+ const p=t.policy;
+ if(!p||typeof p!=='object'||Array.isArray(p))error('Invalid task policy');
+ const mode=p.startMode||'on_claim';
+ if(!['on_claim','admin_details'].includes(mode))error('Unsupported task start mode');
+ const value=p.claimMinutes===undefined?(mode==='admin_details'?60:30):p.claimMinutes;
+ const minutes=value===null?null:Number(value);
+ if(minutes!==null&&(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200))error('Claim minutes must be 1–43200 or null');
+ if(mode==='admin_details'&&minutes===null)error('Admin-released tasks need a work duration');
+ const deadline=p.deadlineAt?Date.parse(p.deadlineAt):null;
+ if(p.deadlineAt&&(!Number.isFinite(deadline)||deadline<=Date.now()))error('Task deadline must be a future date');
+ const behavior=mode==='admin_details'?'hold':(p.expiryAction||'recycle');
+ if(!['hold','recycle'].includes(behavior))error('Invalid expiry behavior');
+ db.prepare('INSERT INTO task_policies(task_id,start_mode,claim_minutes,deadline_at,expiry_action,public_description) VALUES(?,?,?,?,?,?)').run(id,mode,minutes,deadline,behavior,p.publicDescription?1:0);
+ }
  const fields=t.fields||[];if(!Array.isArray(fields)||fields.length>30)error('Use up to 30 fields');
  const clean=fields.map(f=>{text(f.value);return {label:text(f.label,100),value:f.value,copy:!!f.copy};});db.prepare('INSERT INTO task_details VALUES(?,?)').run(id,JSON.stringify(clean));
  const steps=t.steps||[];if(!Array.isArray(steps)||steps.length>20)error('Use up to 20 follow-up steps');steps.forEach((s,i)=>{const stepId=randomUUID();db.prepare('INSERT INTO task_steps(id,task_id,position,title,instruction) VALUES(?,?,?,?,?)').run(stepId,id,i,text(s.title,200),s.instruction?.trim()?text(s.instruction):'');upload(db,user,id,'instruction:'+stepId,s.images);});
@@ -104,6 +139,9 @@ export function route(db,user,path,body,req,res){
  }
  if(path==='/api/submit')return atomic(db,()=>{
  const task=access(db,user,text(body.taskId));if(user.role!=='worker'||task.status!=='claimed')error('Task is not ready for submission');
+ const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(task.id);
+ if(policy?.start_mode==='admin_details'&&!policy.supplied_at)error('Wait for the admin to supply your task details');
+ if(policy?.deadline_at&&Date.now()>=policy.deadline_at)error('The task submission deadline has passed');
  db.prepare('INSERT INTO submissions(id,task_id,worker_id,content) VALUES(?,?,?,?)').run(randomUUID(),task.id,user.id,text(body.content));upload(db,user,task.id,'evidence',body.images);db.prepare("UPDATE tasks SET status='submitted' WHERE id=?").run(task.id);return {ok:true};
  });
  if(path==='/api/quote'){
