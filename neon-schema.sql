@@ -105,6 +105,25 @@ CREATE TABLE IF NOT EXISTS leases (
   expires BIGINT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS task_policies (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(id),
+  start_mode TEXT NOT NULL CHECK(start_mode IN ('on_claim','admin_details')),
+  claim_minutes INTEGER CHECK(claim_minutes IS NULL OR claim_minutes BETWEEN 1 AND 43200),
+  deadline_at BIGINT,
+  supplied_at BIGINT,
+  expiry_action TEXT NOT NULL DEFAULT 'recycle' CHECK(expiry_action IN ('recycle','hold')),
+  public_description INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS task_compensations (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(id),
+  worker_id TEXT NOT NULL REFERENCES users(id),
+  admin_id TEXT NOT NULL REFERENCES users(id),
+  amount BIGINT NOT NULL CHECK(amount > 0),
+  reason TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS profiles (
   user_id TEXT PRIMARY KEY REFERENCES users(id),
   username TEXT UNIQUE NOT NULL,
