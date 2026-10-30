@@ -74,7 +74,8 @@ export async function workflow(
       '/api/review',
       '/api/moderation',
       '/api/correction',
-      '/api/resubmit'
+      '/api/resubmit',
+      '/api/compensate-provider-expired'
     ].includes(path)
   ) {
     return null;
@@ -131,6 +132,25 @@ export async function workflow(
           task.id
         );
 
+      if(path==='/api/compensate-provider-expired'){
+        if(user.role!=='admin')fail('Admin access required');
+        if(task.provider!=='manual-telegram')fail('This recovery action is reserved for expired Telegram-source tasks');
+        if(task.status!=='submitted'||['hold','released','denied'].includes(moderation?.status))fail('Task is not eligible for expired-provider compensation');
+        const credited=await tx.get("SELECT id FROM ledger WHERE task_id=? AND kind IN ('earning','compensation')",task.id);
+        if(credited||await tx.get('SELECT task_id FROM task_compensations WHERE task_id=?',task.id))fail('Task already compensated or credited');
+        const reason=note(body.reason||body.content);
+        const amount=Number(task.reward);
+        const message='The original Telegram-provider task expired before the remaining follow-up steps could be supplied. The provider has NOT approved this task. TaskHarbor is compensating you for the work you already submitted: USD '+(amount/100).toFixed(2)+'. This is a TaskHarbor-funded goodwill payment, not an upstream provider payment. '+reason;
+        await tx.run('INSERT INTO task_compensations(task_id,worker_id,admin_id,amount,reason) VALUES(?,?,?,?,?)',task.id,task.worker_id,user.id,amount,reason);
+        await entry(tx,task.worker_id,'compensation',amount,task.id);
+        await tx.run("UPDATE tasks SET status='rejected' WHERE id=?",task.id);
+        await tx.run("UPDATE submissions SET status='rejected',review_note=? WHERE id=?", 'Provider expired; compensated by TaskHarbor. '+reason,submission.id);
+        if(moderation)await tx.run("UPDATE moderation SET status='denied',note=? WHERE task_id=?", 'Provider expired; TaskHarbor compensation. '+reason,task.id);
+        await tx.run('DELETE FROM leases WHERE task_id=?',task.id);
+        await tx.run('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)',randomUUID(),task.id,user.id,message);
+        await history(tx,task.id,user.id,'provider_expired_compensation',message);
+        return {ok:true,amount};
+      }
       if (
         path ===
         '/api/resubmit'
