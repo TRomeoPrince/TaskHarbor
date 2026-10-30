@@ -37,6 +37,12 @@ test('Gmail on-demand slot waits for an administrator and starts its timer upon 
  assert.throws(()=>post(admin,'supply-gmail-details',{taskId:id,firstName:'Try again',email:'example@gmail.com',password:'A'}),/not awaiting/);
  assert.equal(expireClaims(db,before+100*60000),0,'private account-creation tasks must not automatically recycle after release');
  assert.equal(db.prepare('SELECT worker_id FROM tasks WHERE id=?').get(id).worker_id,member.id);
+ db.prepare('UPDATE leases SET expires=? WHERE task_id=?').run(Date.now()-1000,id);
+ assert.throws(()=>post(member,'submit',{taskId:id,content:'Late'}),/work time expired/);
+ assert.throws(()=>post(member,'extend-task-time',{taskId:id,minutes:60}),/Admin access/);
+ post(admin,'extend-task-time',{taskId:id,minutes:60});
+ post(member,'submit',{taskId:id,content:'Completed Gmail with provided details'});
+ assert.equal(db.prepare('SELECT status FROM tasks WHERE id=?').get(id).status,'submitted');
  db.close();
 });
 
@@ -56,5 +62,20 @@ test('custom claims, no-lease tasks, and fixed deadlines behave independently',(
  db.prepare('UPDATE task_policies SET deadline_at=? WHERE task_id=?').run(Date.now()-1,second);
  assert.throws(()=>post(member,'submit',{taskId:second,content:'Too late'}),/deadline has passed/);
  assert.equal(db.prepare('SELECT COUNT(*) n FROM submissions WHERE task_id=?').get(second).n,0);
+ db.close();
+});
+
+test('an unfilled claim can be safely cancelled and the slot reclaimed',()=>{
+ const {db,users,post}=setup();
+ const [admin,member,other]=users;
+ post(admin,'tasks',quickTask({onDemand:true,workMinutes:30}));
+ const id=db.prepare('SELECT id FROM tasks').get().id;
+ claim(db,id,member.id);
+ post(member,'cancel-unfilled-claim',{taskId:id});
+ assert.equal(db.prepare('SELECT status FROM tasks WHERE id=?').get(id).status,'available');
+ assert.equal(db.prepare('SELECT worker_id FROM tasks WHERE id=?').get(id).worker_id,null);
+ claim(db,id,other.id);
+ assert.equal(db.prepare('SELECT worker_id FROM tasks WHERE id=?').get(id).worker_id,other.id);
+ assert.throws(()=>post(member,'cancel-unfilled-claim',{taskId:id}),/access denied/);
  db.close();
 });
