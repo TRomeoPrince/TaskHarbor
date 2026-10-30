@@ -1,0 +1,34 @@
+name: TaskHarbor Catalyst PostgreSQL workflow tests
+on:
+  push:
+    branches: [feature/catalyst-task-workflows]
+  pull_request:
+    branches: [catalyst-neon-staging]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: taskharbor_test
+          POSTGRES_PASSWORD: synthetic_only_ci_password
+          POSTGRES_DB: taskharbor_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U taskharbor_test -d taskharbor_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://taskharbor_test:synthetic_only_ci_password@127.0.0.1:5432/taskharbor_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
