@@ -9,7 +9,7 @@ export function openStore(path) {
 }
 export function atomic(db, fn) { db.exec('BEGIN IMMEDIATE'); try {const result=fn();db.exec('COMMIT');return result;} catch(e){db.exec('ROLLBACK');throw e;} }
 export function wallet(db, id) {
- const totals=db.prepare("SELECT COALESCE(SUM(amount),0) available, COALESCE(SUM(CASE WHEN kind IN ('earning','referral') THEN amount ELSE 0 END),0) earned FROM ledger WHERE user_id=?").get(id);
+ const totals=db.prepare("SELECT COALESCE(SUM(amount),0) available, COALESCE(SUM(CASE WHEN kind IN ('earning','referral','compensation') THEN amount ELSE 0 END),0) earned FROM ledger WHERE user_id=?").get(id);
  return {...totals,pending:db.prepare("SELECT COALESCE(SUM(reward),0) n FROM tasks WHERE worker_id=? AND status='submitted' AND id NOT IN (SELECT task_id FROM moderation WHERE status='hold')").get(id).n,held:db.prepare("SELECT COALESCE(SUM(t.reward),0) n FROM tasks t JOIN moderation m ON m.task_id=t.id WHERE t.worker_id=? AND m.status='hold'").get(id).n,withdrawn:db.prepare("SELECT COALESCE(SUM(amount),0) n FROM withdrawals WHERE user_id=? AND status='paid'").get(id).n};
 }
 export function claim(db, taskId, userId) {
