@@ -92,6 +92,27 @@ export function route(db,user,path,body,req,res){
  const updated=db.prepare("UPDATE task_steps SET instruction=? WHERE id=? AND task_id=? AND completed=0 AND instruction='' ").run(instruction,text(body.id),task.id);
  if(!updated.changes)error('Step already supplied, completed, or missing');return {ok:true};
  });
+ if(path==='/api/cancel-unfilled-claim')return atomic(db,()=>{
+ const task=access(db,user,text(body.taskId));
+ const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(task.id);
+ if(task.status!=='claimed'||policy?.start_mode!=='admin_details'||policy.supplied_at)error('Only unfilled Gmail claims can be released');
+ db.prepare("UPDATE tasks SET status='available',worker_id=NULL WHERE id=?").run(task.id);
+ db.prepare('DELETE FROM leases WHERE task_id=?').run(task.id);
+ return {ok:true};
+ });
+ if(path==='/api/extend-task-time')return atomic(db,()=>{
+ if(user.role!=='admin')error('Admin access required');
+ const task=access(db,user,text(body.taskId));
+ const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(task.id);
+ if(task.status!=='claimed'||policy?.start_mode!=='admin_details'||!policy.supplied_at)error('Task is not awaiting timed worker submission');
+ const minutes=Number(body.minutes);
+ if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)error('Enter 1–43200 additional minutes');
+ const expires=Date.now()+minutes*60000;
+ const result=db.prepare('UPDATE leases SET expires=? WHERE task_id=? AND worker_id=?').run(expires,task.id,task.worker_id);
+ if(!result.changes)error('Active task timer not found');
+ db.prepare('INSERT INTO messages(id,task_id,sender_id,content) VALUES(?,?,?,?)').run(randomUUID(),task.id,user.id,'Your task work deadline has been extended by '+minutes+' minutes from now.');
+ return {ok:true,expiresAt:expires};
+ });
  if(path==='/api/supply-gmail-details')return atomic(db,()=>{
  if(user.role!=='admin')error('Admin access required');
  const task=access(db,user,text(body.taskId));
@@ -141,6 +162,10 @@ export function route(db,user,path,body,req,res){
  const task=access(db,user,text(body.taskId));if(user.role!=='worker'||task.status!=='claimed')error('Task is not ready for submission');
  const policy=db.prepare('SELECT * FROM task_policies WHERE task_id=?').get(task.id);
  if(policy?.start_mode==='admin_details'&&!policy.supplied_at)error('Wait for the admin to supply your task details');
+ if(policy?.start_mode==='admin_details'&&policy.supplied_at){
+ const lease=db.prepare('SELECT expires FROM leases WHERE task_id=?').get(task.id);
+ if(!lease||Date.now()>lease.expires)error('Your work time expired. Ask the admin to extend your deadline.');
+ }
  if(policy?.deadline_at&&Date.now()>=policy.deadline_at)error('The task submission deadline has passed');
  db.prepare('INSERT INTO submissions(id,task_id,worker_id,content) VALUES(?,?,?,?)').run(randomUUID(),task.id,user.id,text(body.content));upload(db,user,task.id,'evidence',body.images);db.prepare("UPDATE tasks SET status='submitted' WHERE id=?").run(task.id);return {ok:true};
  });
