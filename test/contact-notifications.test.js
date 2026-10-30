@@ -18,6 +18,7 @@ test('PostgreSQL: private contacts/support, opt-in delivery, deduplication and r
  const {contactRoute,scanNotifications,deliverNotifications}=await import('../contact-notifications.js');
  try{
   await db.exec(await readFile(new URL('../neon-schema.sql',import.meta.url),'utf8'));
+  await db.run('INSERT INTO notification_installation(id) VALUES(1) ON CONFLICT DO NOTHING');
   const admin={id:'admin',email:'admin@test.invalid',role:'admin'},worker={id:'worker',email:'worker@test.invalid',role:'worker'},other={id:'other',email:'other@test.invalid',role:'worker'};
   for(const u of [admin,worker,other])await db.run('INSERT INTO users(id,email,password_hash,role) VALUES(?,?,?,?)',u.id,u.email,'synthetic',u.role);
   await contactRoute(db,worker,'/api/member-contacts',{phone:'+256 700 000000',whatsapp:''},'POST');

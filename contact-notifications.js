@@ -178,4 +178,4 @@ export async function deliverNotifications(db,senders={}){
  }
 }
 let working=false;
-export async function notificationTick(db){if(working)return;working=true;try{await scanNotifications(db);await deliverNotifications(db);}catch{console.error('Notification processing failed; will retry');}finally{working=false;}}
+export async function notificationTick(db){if(working)return;working=true;try{await db.run('INSERT INTO notification_installation(id) VALUES(1) ON CONFLICT DO NOTHING');await scanNotifications(db);await deliverNotifications(db);}catch{console.error('Notification processing failed; will retry');}finally{working=false;}}

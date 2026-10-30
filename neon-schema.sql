@@ -267,4 +267,3 @@ CREATE INDEX IF NOT EXISTS notification_outbox_pending ON notification_outbox(st
 CREATE TABLE IF NOT EXISTS notification_installation (
  id INTEGER PRIMARY KEY CHECK(id=1), installed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO notification_installation(id) VALUES(1) ON CONFLICT DO NOTHING;
