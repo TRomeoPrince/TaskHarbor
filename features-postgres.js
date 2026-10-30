@@ -1026,7 +1026,7 @@ export async function route(
     const policy=await tx.get('SELECT * FROM task_policies WHERE task_id=?',task.id);
     if(task.provider!=='manual-telegram'||task.status!=='claimed'||!task.worker_id||policy?.start_mode!=='admin_details'||policy.supplied_at)error('This task is not awaiting Gmail account details');
     const first=text(body.firstName,100),email=text(body.email,254).toLowerCase();
-    if(!/^[a-z0-9.]+(?:\\+[^\\s@]+)?@gmail\\.com$/.test(email))error('Enter the Gmail address supplied by the bot');
+    if(!/^[a-z0-9.]+(?:\+[^\s@]+)?@gmail\.com$/.test(email))error('Enter the Gmail address supplied by the bot');
     const password=text(body.password,256),last=body.lastName?.trim()||'No last name — Leave blank / empty';
     if(last.length>200)error('Last name instruction is too long');
     const minutes=Number(body.minutes??policy.claim_minutes);
