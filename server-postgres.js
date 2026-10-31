@@ -304,27 +304,25 @@ const server = http.createServer(
         );
       }
 
-      const token =
-        (req.headers.cookie || '')
-          .match(
-            /(?:^|;\s*)session=([^;]+)/
-          )?.[1];
-
-      const user = await db.get(
-        `
-        SELECT
-          u.id,
-          u.email,
-          u.role
-        FROM sessions s
-        JOIN users u
-          ON u.id=s.user_id
-        WHERE s.token=?
-          AND s.expires>?
-        `,
-        token || '',
-        Date.now()
-      );
+      // During the canonical-host transition browsers can present both an
+      // old host-only session cookie and the new shared-domain session.
+      // Accept the first *valid* token rather than assuming the first
+      // cookie is current. Limit candidates to bound database queries.
+      const cookieTokens = [...(req.headers.cookie || '')
+        .matchAll(/(?:^|;\s*)session=([a-f0-9]{64})(?=;|$)/g)]
+        .slice(0, 5)
+        .map(m => m[1]);
+      let token = '';
+      let user = null;
+      for (const candidate of cookieTokens) {
+        const account = await db.get(
+          `SELECT u.id,u.email,u.role
+             FROM sessions s JOIN users u ON u.id=s.user_id
+            WHERE s.token=? AND s.expires>?`,
+          candidate, Date.now()
+        );
+        if (account) { token = candidate; user = account; break; }
+      }
 
       let result;
 
