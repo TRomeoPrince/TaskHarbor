@@ -129,7 +129,7 @@ export async function scanNotifications(db){
     // Support correspondence is transactional, separate from general alerts.
     // No outgoing email is created until SMTP has been configured.
     const cfg=notificationConfig();
-    if(cfg.emailReady){
+    if(cfg.emailReady&&(process.env.SUPPORT_INBOX_EMAIL||process.env.SUPPORT_EMAIL)){
      const inbox=process.env.SUPPORT_INBOX_EMAIL||process.env.SUPPORT_EMAIL||'';
      const destination=message.role==='admin'?message.owner_email:inbox;
      const recipientId=message.role==='admin'?message.user_id:(await tx.get("SELECT id FROM users WHERE role='admin' ORDER BY created_at LIMIT 1"))?.id;
