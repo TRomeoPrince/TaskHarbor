@@ -1,5 +1,92 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contact & alerts · TaskHarbor</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/dashboard-v2.css"><script src="/contact.js" type="module"></script></head><body><header><a class="brand" href="/">TaskHarbor.</a><nav><a href="/">Dashboard</a><a href="/profile">My profile</a><a href="/contact">Contact &amp; alerts</a></nav></header><main><h1>Contact &amp; alerts</h1><p id="notice" role="status"></p><div id="content" hidden>
-<section><h2>My contact details</h2><p>Optional. Only you and TaskHarbor administrators can see these numbers. They are not shared with other members.</p><form id="contacts"><label>Phone number<input name="phone" type="tel" maxlength="32" autocomplete="tel" placeholder="+256 …"></label><button>Save contacts</button></form></section>
-<section><h2>Notifications</h2><p id="audience"></p><p id="configuration"></p><p id="device-note"></p><form id="preferences"><label><input name="email" type="checkbox"> Email alerts (requires confirmation)</label><label><input name="push" type="checkbox"> Phone / PC push alerts</label><button>Save alert preferences</button></form><button id="enable-push" type="button">Enable alerts on this device</button><button id="disable-push" type="button" class="secondary">Remove this device</button><button id="confirm-email" type="button" hidden>Confirm email alerts</button><h3>Your inbox</h3><button id="refresh-alerts" type="button" class="secondary">Refresh inbox</button><div id="alerts"></div></section>
-<section><h2>Contact TaskHarbor</h2><p id="public-contacts"></p><p>Use this private inbox for help. Do not send passwords, identity documents, or personal recordings.</p><form id="new-thread"><label>Subject<input name="subject" required maxlength="150"></label><label>Your message<textarea name="content" required maxlength="5000"></textarea></label><button>Send to support</button></form><h3>Conversations</h3><div id="threads"></div><section id="conversation" hidden><h3 id="thread-title"></h3><p id="thread-status"></p><div id="messages"></div><form id="reply"><label>Reply<textarea name="content" required maxlength="5000"></textarea></label><button>Send reply</button></form><button id="toggle-thread" type="button" hidden>Close conversation</button></section></section>
-<section id="directory" hidden><h2>Member contacts · Admin only</h2><p>Latest 500 saved member contacts.</p><div id="members"></div></section></div></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Support & notifications · TaskHarbor</title>
+<meta name="description" content="Manage your TaskHarbor support conversations and notifications.">
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/dashboard-v2.css"><link rel="stylesheet" href="/contact-v3.css">
+<script src="/contact.js" type="module"></script>
+</head>
+<body class="support-page">
+<header class="site-header">
+ <a class="brand" href="/">TaskHarbor<span class="brand-dot">.</span></a>
+ <nav aria-label="Main navigation">
+  <a href="/">Dashboard</a>
+  <a href="/payouts">Payouts</a>
+  <a href="/profile">My profile</a>
+  <a href="/contact" aria-current="page">Support &amp; alerts</a>
+ </nav>
+</header>
+<main class="support-layout">
+ <div class="support-intro">
+  <div><p class="eyebrow" id="support-eyebrow">TASKHARBOR · HELP CENTER</p>
+  <h1 id="support-heading">Help is right here.</h1>
+  <p id="support-description">Talk privately with our team, check replies and manage your alerts in one organized space.</p></div>
+  <div class="support-illustration" aria-hidden="true"><span class="support-illustration-icon">✦</span><strong>We are here<br>to help.</strong><small>Clear conversations. Real updates.</small></div>
+ </div>
+ <p id="notice" role="status" aria-live="polite"></p>
+ <div id="content" hidden>
+  <div class="support-grid">
+   <div class="support-main">
+    <section class="support-card" id="support-threads">
+     <div class="support-heading"><div><span class="section-icon">✉</span><h2 id="support-threads-title">My conversations</h2></div><span id="thread-count" class="support-count"></span></div>
+     <p class="section-lead" id="thread-caption">Your messages and replies are private to you and the support team.</p>
+     <div id="threads" class="thread-list" aria-live="polite"></div>
+     <section id="conversation" class="conversation-panel" hidden>
+      <div class="conversation-head"><div><h3 id="thread-title"></h3><p id="thread-status" class="muted"></p></div><button id="toggle-thread" class="secondary" type="button" hidden>Close conversation</button></div>
+      <div id="messages" class="message-stream"></div>
+      <form id="reply" class="support-form"><label for="reply-message">Your reply</label><textarea id="reply-message" name="content" required maxlength="5000" placeholder="Write your reply..."></textarea><button type="submit">Send reply</button></form>
+     </section>
+    </section>
+    <section class="support-card" id="support-compose">
+     <div class="support-heading"><div><span class="section-icon">＋</span><h2>Start a conversation</h2></div></div>
+     <p class="section-lead">Ask us about task instructions, reviews or withdrawals. We usually respond through this inbox.</p>
+     <form id="new-thread" class="support-form">
+       <label for="ticket-subject">Subject</label><input id="ticket-subject" name="subject" required maxlength="150" placeholder="How can we help?">
+       <label for="ticket-message">Describe your question</label><textarea id="ticket-message" name="content" required maxlength="5000" placeholder="Share the relevant task reference, if available."></textarea>
+       <p class="form-hint">Never send passwords, identification documents or private recordings.</p>
+       <button type="submit">Send message</button>
+     </form>
+    </section>
+    <section id="directory" class="support-card" hidden>
+     <div class="support-heading"><div><span class="section-icon">♙</span><h2>Member contact directory</h2></div></div>
+     <p class="section-lead">Only administrators can view members' voluntarily saved contact details. Up to 500 recent records.</p>
+     <div id="members" class="member-directory"></div>
+    </section>
+   </div>
+   <aside class="support-side">
+    <section class="support-card" id="alert-center">
+     <div class="support-heading"><div><span class="section-icon">◉</span><h2>Activity inbox</h2></div></div>
+     <p class="section-lead" id="audience">Your account notifications appear here.</p>
+     <div class="inbox-tools"><span id="inbox-summary" class="support-count"></span><button id="refresh-alerts" type="button" class="secondary">Refresh</button></div>
+     <div id="alerts" class="alert-list" aria-live="polite"></div>
+    </section>
+    <section class="support-card" id="user-contact">
+     <div class="support-heading"><div><span class="section-icon">♧</span><h2>Contact information</h2></div></div>
+     <p class="section-lead">Optional and private. Visible only to you and authorized TaskHarbor administrators.</p>
+     <form id="contacts" class="support-form"><label for="contact-phone">Phone number</label>
+      <input id="contact-phone" name="phone" type="tel" maxlength="32" autocomplete="tel" placeholder="+256 700 000 000">
+      <button type="submit" class="secondary">Save contact</button></form>
+    </section>
+    <section class="support-card" id="notification-settings" hidden>
+     <div class="support-heading"><div><span class="section-icon">⚙</span><h2>Delivery preferences</h2></div></div>
+     <p id="configuration" class="section-lead"></p><p id="device-note" class="form-hint"></p>
+     <form id="preferences" class="support-form">
+      <label class="toggle-line" id="email-preference"><input name="email" type="checkbox"> Email updates <small>Requires confirmation</small></label>
+      <label class="toggle-line" id="push-preference"><input name="push" type="checkbox"> Device push alerts</label>
+      <button type="submit">Save preferences</button>
+     </form>
+     <div class="notification-actions"><button id="enable-push" type="button" class="secondary">Enable this device</button><button id="disable-push" type="button" class="secondary">Remove device</button></div>
+     <button id="confirm-email" type="button" hidden>Confirm email subscription</button>
+    </section>
+    <section class="support-card compact-help" id="help-contacts">
+     <h2>Need assistance?</h2>
+     <p>Use the secure conversation inbox for account and task support.</p>
+     <div id="public-contacts" class="public-contact-links"></div>
+    </section>
+   </aside>
+  </div>
+ </div>
+</main>
+</body>
+</html>
