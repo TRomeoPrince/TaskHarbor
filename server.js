@@ -145,6 +145,7 @@ const server=http.createServer(async(req,res)=>{
   '/':'index.html',
   '/app.js':'app.js',
   '/style.css':'style.css',
+          '/dashboard-v2.css': 'dashboard-v2.css',
   '/payouts':'payouts.html',
   '/payouts/':'payouts.html',
   '/profile':'profile.html',
