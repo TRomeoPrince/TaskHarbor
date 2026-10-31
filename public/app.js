@@ -95,8 +95,8 @@ function workflowMarkup(t,admin){
  return html;
 }
 function setHTML(id,html){if($(id).innerHTML!==html)$(id).innerHTML=html;}
-function applyTaskFilter(){const filter=$('task-filter')?.value||'all';document.querySelectorAll('#tasks .task-listing').forEach(item=>{item.hidden=filter!=='all'&&item.dataset.status!==filter;});}
-$('task-filter')?.addEventListener('change',applyTaskFilter);
+function applyTaskFilter(){const filter=$('task-filter')?.value||'all';document.querySelectorAll?.('#tasks .task-listing')?.forEach(item=>{item.hidden=filter!=='all'&&item.dataset.status!==filter;});}
+$('task-filter')?.addEventListener?.('change',applyTaskFilter);
 function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('main-nav').hidden=false;$('guest-nav').hidden=true;$('landing').hidden=true;$('identity').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
  if(!admin&&s.profile?.preferred_currency)currency=s.profile.preferred_currency;
  if(admin||!(currency in s.currencies))currency='USD';$('currency').disabled=admin;
