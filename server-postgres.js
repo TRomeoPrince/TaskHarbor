@@ -216,6 +216,8 @@ const server = http.createServer(
           '/': 'index.html',
           '/app.js': 'app.js',
           '/style.css': 'style.css',
+          '/dashboard-v2.css': 'dashboard-v2.css',
+          '/contact-v3.css': 'contact-v3.css',
           '/payouts': 'payouts.html',
           '/payouts/': 'payouts.html',
           '/profile': 'profile.html',
@@ -254,12 +256,14 @@ const server = http.createServer(
         );
       }
 
-      const publicOrigin =
-        process.env.PUBLIC_ORIGIN
-          ? new URL(
-              process.env.PUBLIC_ORIGIN
-            ).origin
-          : null;
+      const publicOrigin = process.env.PUBLIC_ORIGIN ? new URL(process.env.PUBLIC_ORIGIN).origin : null;
+      // One cookie for the canonical site and its www hostname, without sending
+      // production cookies to Catalyst's preview hostname or unrelated domains.
+      const requestHost = (req.headers.host || '').split(':')[0].toLowerCase();
+      const sharedSite = requestHost === 'taskharbor.cc.cd' || requestHost === 'www.taskharbor.cc.cd';
+      const cookieDomain = sharedSite ? '; Domain=taskharbor.cc.cd' : '';
+      const cookieSecure = sharedSite || publicOrigin?.startsWith('https:') ? '; Secure' : '';
+      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieDomain + cookieSecure;
 
       const allowedOrigins = new Set([
         `http://${req.headers.host}`,
@@ -300,27 +304,25 @@ const server = http.createServer(
         );
       }
 
-      const token =
-        (req.headers.cookie || '')
-          .match(
-            /(?:^|;\s*)session=([^;]+)/
-          )?.[1];
-
-      const user = await db.get(
-        `
-        SELECT
-          u.id,
-          u.email,
-          u.role
-        FROM sessions s
-        JOIN users u
-          ON u.id=s.user_id
-        WHERE s.token=?
-          AND s.expires>?
-        `,
-        token || '',
-        Date.now()
-      );
+      // During the canonical-host transition browsers can present both an
+      // old host-only session cookie and the new shared-domain session.
+      // Accept the first *valid* token rather than assuming the first
+      // cookie is current. Limit candidates to bound database queries.
+      const cookieTokens = [...(req.headers.cookie || '')
+        .matchAll(/(?:^|;\s*)session=([a-f0-9]{64})(?=;|$)/g)]
+        .slice(0, 5)
+        .map(m => m[1]);
+      let token = '';
+      let user = null;
+      for (const candidate of cookieTokens) {
+        const account = await db.get(
+          `SELECT u.id,u.email,u.role
+             FROM sessions s JOIN users u ON u.id=s.user_id
+            WHERE s.token=? AND s.expires>?`,
+          candidate, Date.now()
+        );
+        if (account) { token = candidate; user = account; break; }
+      }
 
       let result;
 
@@ -477,13 +479,7 @@ const server = http.createServer(
 
         res.setHeader(
           'Set-Cookie',
-          `session=${sessionToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${
-            publicOrigin?.startsWith(
-              'https:'
-            )
-              ? '; Secure'
-              : ''
-          }`
+          `session=${sessionToken}${cookieOptions}; Max-Age=86400`
         );
 
         result = { ok: true };
@@ -732,17 +728,18 @@ const server = http.createServer(
           if (
             path === '/api/logout'
           ) {
-            await db.run(
-              `
-              DELETE FROM sessions
-              WHERE token=?
-              `,
-              token
-            );
+            // Clear every presented session belonging to this account, so
+            // old host-only cookies cannot silently sign the user back in.
+            for (const activeToken of cookieTokens) {
+              await db.run(
+                'DELETE FROM sessions WHERE token=? AND user_id=?',
+                activeToken, user.id
+              );
+            }
 
             res.setHeader(
               'Set-Cookie',
-              'session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+              `session=${cookieOptions}; Max-Age=0`
             );
           } else if (
             path === '/api/claim'

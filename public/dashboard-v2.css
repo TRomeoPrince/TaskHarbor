@@ -1,0 +1,209 @@
+/* TaskHarbor V2 — unified visual system. Scoped to the existing UI; no workflow changes. */
+:root {
+  --th-ink:#183c32; --th-ink-soft:#4f6d63; --th-green:#176f56;
+  --th-mint:#e8f5ed; --th-cream:#fbfaf5; --th-border:#dfe9e2;
+  --th-gold:#e5ae65; --th-shadow:0 14px 42px rgba(25,59,44,.055);
+}
+body{background:#f6f8f5;color:var(--th-ink)}
+main{max-width:1300px}
+button{border-radius:11px;min-height:41px;transition:background .18s,transform .18s,box-shadow .18s}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #83bb9a;outline-offset:2px}
+input,textarea,select{border-radius:10px;border:1px solid #cfdcd3}
+#main-nav a[aria-current=page],.site-header nav a[aria-current=page]{background:#e5f4ec;color:#155e4b}
+.site-header{background:#fff;border-color:#e8eee8;box-shadow:0 4px 25px rgba(24,60,50,.028)}
+.site-header .brand{letter-spacing:-1.2px}
+.site-header #identity{color:var(--th-ink-soft);font-size:12px}
+#workspace{--th-panel:#fff}
+#workspace .heading{margin:18px 0 0}
+#workspace .heading h1{font-size:clamp(25px,3vw,39px);margin:8px 0 0;letter-spacing:-1.3px}
+#workspace .eyebrow{letter-spacing:2.4px;font-size:10px}
+#workspace #connection{display:inline-flex;align-items:center;gap:7px;background:#e7f4ec;color:#27654d;border:1px solid #d2e9da;padding:8px 13px;border-radius:999px;font-size:11px;font-weight:650;margin:10px 0 20px}
+#workspace #connection:before{content:"";width:6px;height:6px;border-radius:50%;background:#4dba7a;box-shadow:0 0 0 3px #bfe8ce}
+.workspace-hero{position:relative;isolation:isolate;overflow:hidden;min-height:240px;border:1px solid #dbe9dc;border-radius:24px;background:linear-gradient(110deg,#ecf7ee 0%,#f6f9ed 57%,#fcefd7 100%);padding:32px 35px 26px;display:grid;grid-template-columns:1.4fr 1fr;align-items:center;box-shadow:var(--th-shadow)}
+.workspace-hero:before{content:"";position:absolute;inset:auto -130px -250px auto;width:550px;height:550px;border:1px solid #7da58b42;border-radius:50%;z-index:-1}
+.workspace-hero:after{content:"";position:absolute;top:-190px;right:-120px;width:400px;height:400px;border:1px dashed #8eae9680;border-radius:50%;z-index:-1}
+.workspace-hero-copy{max-width:575px;position:relative;z-index:1}
+.workspace-kicker{display:block;color:#358365;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.workspace-hero h2{font-size:clamp(29px,3.4vw,45px);line-height:1.09;letter-spacing:-1.8px;margin:0 0 15px;color:#164434;font-weight:740}
+.workspace-hero h2 em{font-family:Georgia,serif;font-weight:400;color:#ac7b40}
+.workspace-hero p{max-width:500px;color:#557165;font-size:14px;line-height:1.7}
+.workspace-hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.workspace-hero-links a{display:inline-flex;text-decoration:none;padding:11px 16px;border-radius:10px;background:#176f56;color:#fff;font-size:12px;font-weight:750;align-items:center}
+.workspace-hero-links a+ a{background:#fff;color:#31594b;border:1px solid #d5e5d8}
+.workspace-art{position:relative;height:190px;min-width:225px}
+.workspace-art .art-circle{position:absolute;left:22%;top:0;width:180px;height:180px;border-radius:50%;background:linear-gradient(145deg,#c2e8d4,#e1f1d4);border:1px solid #aed7c2}
+.workspace-art .art-card{position:absolute;top:30px;left:16%;width:210px;min-height:125px;padding:20px;border-radius:17px;background:#fff;color:#244c3e;box-shadow:0 17px 32px #386c5033;transform:rotate(-7deg);border:1px solid #e4ecdf}
+.workspace-art .art-card small{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:#6e8c79;font-weight:700}
+.workspace-art .art-card strong{display:block;font-size:23px;margin:8px 0 14px;letter-spacing:-1px}
+.workspace-art .art-lines{display:flex;gap:6px}.workspace-art .art-lines span{height:6px;background:#dae9df;border-radius:10px;flex:1}.workspace-art .art-lines span:first-child{background:#69b28e}
+.workspace-art .art-mini{position:absolute;right:0;bottom:7px;background:#f8d6a4;border-radius:12px;padding:14px 18px;box-shadow:0 9px 22px #88754621;transform:rotate(7deg);font-size:12px;font-weight:750}
+.workspace-art .art-mini span{display:block;font-size:10px;font-weight:500;color:#74644a;margin-top:3px}
+.workspace-tools{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:end;margin:25px 0}
+.workspace-tools label{margin:0;display:flex;gap:8px;align-items:center;font-size:12px;color:#537065;font-weight:700}
+.workspace-tools select{margin:0;background:#fff;min-width:112px}
+.workspace-tools .rate-notes{max-width:680px;display:grid;gap:2px}
+.workspace-tools .rate-notes p{font-size:11px;line-height:1.5;margin:0}
+.workspace-tools .rate-notes p:last-child a{color:#5b8372}
+.wallet-panel-title{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:28px 0 13px}
+.wallet-panel-title h2{margin:0;font-size:19px;letter-spacing:-.5px}
+.wallet-panel-title p{margin:0;font-size:12px;color:#698175}
+#balances.cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+#balances .wallet-card{border:1px solid #e0e9e1;border-radius:18px;min-width:0;box-shadow:var(--th-shadow);padding:20px;position:relative;overflow:hidden}
+#balances .wallet-card:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;background:#d9f1e277;right:-40px;top:-46px}
+#balances .wallet-card .wallet-icon{display:grid;place-items:center;height:38px;width:38px;font-size:18px;color:#1c7658;background:#e8f5ed;border-radius:11px;margin-bottom:19px}
+#balances .wallet-card span{font-size:12px;color:#688074;text-transform:capitalize;font-weight:650}
+#balances .wallet-card strong{display:block;font-size:clamp(23px,2.6vw,30px);letter-spacing:-1px;margin-top:10px;white-space:normal;overflow-wrap:anywhere}
+#balances .wallet-card small{display:block;font-size:10px;color:#7c9486;margin-top:8px;line-height:1.4}
+#balances .wallet-available{background:#eaf6ee;border-color:#cfe8d8}
+#balances .wallet-available .wallet-icon{background:#cfebdc}
+#balances .wallet-pending{background:#fffaf1;border-color:#f0e3c7}
+#balances .wallet-pending .wallet-icon{color:#966528;background:#f7e6c7}
+#workspace .wallet-policy{font-size:11px;line-height:1.6;color:#7c8d84;margin:10px 0 28px}
+.workspace-section{margin-top:36px}
+.workspace-section .section-heading{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:17px}
+.workspace-section .section-heading h2{font-size:22px;letter-spacing:-.6px;margin:0}
+.workspace-section .section-heading p{font-size:12px;color:#7b8c83;margin:6px 0 0}
+.workspace-section .section-heading select{margin:0;background:#fff}
+#tasks.grid{grid-template-columns:1fr;gap:10px}
+#tasks .task-listing{padding:0;border:1px solid #e0e9e3;border-radius:17px;box-shadow:var(--th-shadow);overflow:hidden;scroll-margin-top:28px;background:#fff}
+#tasks .task-listing[hidden]{display:none!important}
+#tasks .task-disclosure{margin:0}
+#tasks .task-summary{display:flex;align-items:center;gap:17px;cursor:pointer;padding:19px 22px;list-style:none;min-height:90px}
+#tasks .task-summary::-webkit-details-marker{display:none}
+#tasks .task-summary:focus-visible{outline-offset:-3px}
+#tasks .task-summary:hover{background:#f8fbf8}
+#tasks .task-category-icon{width:45px;height:45px;flex:0 0 45px;display:grid;place-items:center;background:#e7f3ed;border-radius:13px;color:#257251;font-size:21px;font-weight:700}
+#tasks .task-primary{flex:1;min-width:0}
+#tasks .task-title{display:block;font-size:15px;color:#213d32;font-weight:750;line-height:1.4;overflow-wrap:anywhere}
+#tasks .task-metadata{display:block;font-size:11px;color:#819489;margin-top:6px;text-transform:capitalize}
+#tasks .task-reward{font-size:20px;color:#177454;font-weight:780;white-space:nowrap;margin-left:auto;letter-spacing:-.5px}
+#tasks .task-open{border:1px solid #d9e7dd;border-radius:9px;padding:8px 12px;color:#4c7661;font-size:11px;white-space:nowrap;background:#f7faf6}
+#tasks details[open] .task-open{background:#e9f4ed;border-color:#b9dfca}
+#tasks .task-detail{border-top:1px solid #e5ece6;background:#fbfdfb;padding:22px 25px 26px}
+#tasks .task-detail .task-detail-lead{white-space:pre-wrap;font-size:13px;line-height:1.8;color:#526f61;margin:0 0 18px;overflow-wrap:anywhere}
+#tasks .task-detail>button{margin-top:11px}
+#tasks .task-detail .copy-field{background:#fff;border:1px solid #e2eae2}
+#tasks .task-detail .message{background:#eaf4ec;border-left:3px solid #76b792}
+#tasks .task-detail h4{margin-top:24px}
+#tasks .task-detail .badge{margin:5px}
+#referral-box{background:linear-gradient(116deg,#edf6ed,#fffaf2);border-radius:18px;border-color:#dbe8da;box-shadow:var(--th-shadow);padding:24px}
+#referral-box h2{margin:0 0 8px;font-size:19px}
+#referral-box label{font-size:12px;color:#567164}
+#workspace section:not(#admin)>.row,#workspace>section:not(#admin) .row{border-radius:14px;box-shadow:0 5px 14px #274e3507}
+#workspace #admin{margin-top:35px;border-radius:18px;padding:20px 24px;background:#f4f8f4;border:1px solid #dce8df}
+#workspace #admin h2{font-size:19px;letter-spacing:-.3px}
+#workspace #admin h2:first-of-type{margin-top:18px}
+#workspace #admin .row{border-radius:13px}
+#workspace #admin form{max-width:760px}
+#workspace #withdrawBox{background:#fff;padding:24px;border:1px solid #e0e8e0;border-radius:18px;box-shadow:var(--th-shadow)}
+#workspace #withdrawBox h2{margin:0 0 10px}
+#workspace #withdrawBox .row{font-size:12px}
+#workspace #withdrawBox form{max-width:650px}
+#workspace #submissions,#workspace #withdrawals,#workspace #transactions{display:grid;gap:10px}
+#workspace #submissions .row,#workspace #withdrawals .row,#workspace #transactions .row{margin:0}
+body:has(#workspace:not([hidden])) .site-header{position:sticky;top:0;z-index:20}
+body:has(#workspace:not([hidden])) #main-nav{gap:3px}
+body:has(#workspace:not([hidden])) #main-nav a{font-size:12px;border-radius:10px}
+body:has(#workspace:not([hidden])) .brand{color:#21523e}
+body:has(#workspace:not([hidden])) #logout{background:#f3f7f3;color:#31594a;border:1px solid #dce9dd;font-size:11px}
+body:has(#workspace:not([hidden])) main{padding-top:24px}
+#profile-notice,#status{color:#58766a}
+body:has(#profile-form) main,body:has(#payout-feed) main,body:has(#contact-form) main{max-width:1100px}
+body:has(#profile-form) .row,body:has(#payout-feed) .row{border-radius:17px;box-shadow:var(--th-shadow)}
+/* Lighter, editorial public pages bring the same brand to visitors and workers. */
+body:has(#landing:not([hidden])),body:has(#auth:not([hidden])){background:var(--th-cream);color:var(--th-ink)}
+body:has(#landing:not([hidden])) .site-header,body:has(#auth:not([hidden])) .site-header{background:#fdfdf8;border-bottom:1px solid #e5ebe1}
+body:has(#landing:not([hidden])) .brand,body:has(#auth:not([hidden])) .brand{color:#1b4836}
+.site-header #guest-nav a{color:#335e4b}
+.site-header #guest-nav a:hover{color:#11644b}
+.site-header #guest-nav .guest-signup{background:#1d7255;color:#fff}
+#landing{--welcome-cream:#193d32;--welcome-muted:#60756b;--welcome-accent:#b88248}
+#landing .welcome-hero{background:radial-gradient(circle at 76% 43%,#eaf5e6 0%,#f7fbf2 37%,transparent 70%);max-width:none;padding-left:max(5%,calc((100vw - 1320px)/2));padding-right:max(5%,calc((100vw - 1320px)/2))}
+#landing h1{color:#1b4235}
+#landing h1 em,#landing h2 em{color:#a77642}
+#landing .welcome-kicker{color:#3d8666}
+#landing .welcome-kicker>span{background:#53a279}
+#landing .hero-description{color:#5b7667}
+#landing .hero-footnote{color:#678475}
+#landing .welcome-text-link{color:#2f604d}
+#landing .welcome-button{background:#1b7054;color:#fff;border-radius:10px}
+#landing .welcome-button:hover{background:#125e47}
+#landing .orbit{border-color:#709c7e45}
+#landing .harbor-star{color:#b99669}
+#landing .floating-note{background:#e1f3e8;border:1px solid #c9e3d1;color:#37684e}
+#landing .illustration-card{box-shadow:20px 25px 65px #2b614426}
+#landing .floating-reward{box-shadow:0 15px 30px #82714520}
+#landing .art-caption{color:#77947f}
+#landing .welcome-strip{border-color:#e6eee4;background:#eaf3e9;color:#426753}
+#landing .welcome-strip span:nth-child(even){color:#b28b58}
+#landing .welcome-how{background:transparent}
+#landing .welcome-steps h3{color:#224c38}
+#landing .welcome-steps p,#landing .how-heading>p:last-child{color:#668174}
+#landing .step-number{color:#3a7a5a;border-color:#dce8da}
+#landing .welcome-cta{background:#e7f3e7;border-color:#d0e5d2;box-shadow:var(--th-shadow)}
+#landing .welcome-cta h2{color:#214b37}
+#landing .welcome-cta p:last-child{color:#53775f}
+#landing .welcome-footer{border-color:#dfebdf}
+#landing .welcome-footer .brand{color:#24543d}
+#landing .welcome-footer p{color:#68806f}
+body:has(#auth:not([hidden])) #auth{border:1px solid #e4ecdf;box-shadow:0 20px 60px #27614512}
+@media(max-width:1050px){
+ #balances.cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .workspace-hero{grid-template-columns:1.35fr .8fr}
+ #main-nav a{padding:9px}
+}
+@media(max-width:720px){
+ body:has(#workspace:not([hidden])) .site-header{position:static}
+ #workspace .heading{align-items:center}
+ .workspace-hero{grid-template-columns:1fr;padding:26px 23px;min-height:0}
+ .workspace-hero h2{font-size:33px}
+ .workspace-art{display:none}
+ .workspace-tools{align-items:stretch}
+ #tasks .task-summary{gap:10px;padding:15px}
+ #tasks .task-category-icon{height:37px;width:37px;flex-basis:37px;font-size:16px}
+ #tasks .task-reward{font-size:15px}
+ #tasks .task-open{display:none}
+ #tasks .task-detail{padding:16px}
+ .wallet-panel-title{align-items:start;flex-direction:column}
+ #landing .welcome-hero{padding-left:24px;padding-right:24px}
+ #landing .welcome-steps>div{border-color:#d5e5d8}
+}
+@media(max-width:440px){
+ #balances.cards{grid-template-columns:1fr 1fr;gap:9px}
+ #balances .wallet-card{padding:14px}
+ #balances .wallet-card strong{font-size:20px}
+ #balances .wallet-card span{font-size:11px}
+ #balances .wallet-card .wallet-icon{width:32px;height:32px;margin-bottom:13px}
+ #workspace #admin{padding:15px}
+ .workspace-section .section-heading{align-items:flex-start}
+ #tasks .task-title{font-size:13px}
+ #tasks .task-metadata{font-size:10px}
+ #tasks .task-summary{gap:8px}
+}
+@media(prefers-reduced-motion:reduce){button{transition:none}button:hover:not(:disabled){transform:none}}
+
+
+/* Admin mode: a separate operations surface, not the member earnings page. */
+.admin-overview{margin:25px 0 34px;padding:27px 28px;background:linear-gradient(120deg,#eef7ec,#fff8e9);border:1px solid #dcebdc;border-radius:22px;box-shadow:var(--th-shadow)}
+.admin-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.admin-heading h2{font-size:24px;letter-spacing:-.7px;margin:6px 0 6px}
+.admin-heading p:not(.eyebrow){font-size:12px;color:#6b8170;line-height:1.65;margin:0}
+.admin-support-link{color:#1c6950;text-decoration:none;font-size:12px;font-weight:750;padding:11px 15px;border:1px solid #cadece;background:#fff;border-radius:10px;white-space:nowrap}
+.admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0}
+.admin-stats>div{background:#fff;border:1px solid #e0ebe1;border-radius:15px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.admin-stats span{color:#687f6f;font-size:12px;font-weight:650}
+.admin-stats strong{color:#1b634b;font-size:33px;letter-spacing:-1px}
+.admin-stats small{font-size:10px;color:#899d8d}
+.admin-shortcuts{display:flex;flex-wrap:wrap;gap:9px}
+.admin-shortcuts a{background:#e4f1e7;color:#266d50;text-decoration:none;padding:10px 13px;border:1px solid #cfe1d3;border-radius:10px;font-size:11px;font-weight:750}
+.admin-shortcuts a:hover{background:#d5eada}
+.admin-zone .admin-section-heading{border-bottom:1px solid #dae7dc;padding-bottom:15px;margin-bottom:18px}
+.admin-zone .admin-section-heading h2{font-size:25px!important;letter-spacing:-.8px;margin:6px 0}
+.admin-zone .admin-section-heading p:last-child{font-size:12px;color:#6a8170;margin:8px 0}
+.admin-zone .admin-legacy-workflow{background:#fff;border:1px solid #dce8df;border-radius:14px;padding:0;margin:12px 0 26px}
+.admin-zone .admin-legacy-workflow summary{padding:17px;font-weight:700;font-size:12px;color:#567664}
+.admin-zone .admin-legacy-workflow>section{margin:0;border:0;border-top:1px solid #e1e9df;border-radius:0}
+#workspace [hidden]{display:none!important}
+@media(max-width:730px){.admin-overview{padding:20px 17px}.admin-stats{grid-template-columns:1fr 1fr;gap:9px}.admin-stats>div{padding:14px}.admin-stats strong{font-size:27px}.admin-heading{align-items:flex-start;flex-direction:column}}
+@media(max-width:420px){.admin-stats{grid-template-columns:1fr}.admin-shortcuts a{flex:1;text-align:center}}
