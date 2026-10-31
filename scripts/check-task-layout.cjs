@@ -7,8 +7,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 let role='worker';
 const tasks=Array.from({length:7},(_,i)=>({id:'fixture-'+i,title:i===0?'CREATE GMAIL':i===1?'TRAINING AI MODULES':'Review product information '+i,provider:i===1?'vetella-faceatlas':'manual-telegram',description:i===1?'Help improve an AI dataset by contributing a complete video set.\n\nELIGIBILITY: Follow the official contributor requirements.\n\nPAYMENT: The full set requires contractor approval and payment eligibility.':'Claim this task to view its private instructions.',reward:i===1?700:12,status:i===0?'claimed':'available',worker_id:i===0?'fixture-worker':null,policy:{public_description:i===1?1:0},steps:[],fields:i===0?[{label:'Synthetic private value',value:'FIXTURE ONLY',copy:true}]:[],images:[],messages:[],history:[]}));
 function state(){return {user:{id:role==='admin'?'fixture-admin':'fixture-worker',email:role+'@example.test',role},currencies:{USD:2,UGX:0},rates:[{currency:'USD',rate:1000000,updated_at:Date.now()},{currency:'UGX',rate:3700000000,updated_at:Date.now()}],wallet:{available:24,earned:24,pending:12,held:0,withdrawn:0},tasks,submissions:role==='admin'?[{id:'fixture-submission',task_id:'fixture-2',worker_id:'other',status:'pending',content:'Synthetic submission evidence'}]:[],withdrawals:[],transactions:[]};}
-const files={'/':'public/index.html','/app.js':'public/app.js','/style.css':'public/style.css'};
+const files={'/dashboard':'public/index.html','/':'public/index.html','/app.js':'public/app.js','/style.css':'public/style.css','/profile':'public/profile.html','/profile.js':'public/profile.js','/payouts':'public/payouts.html','/payouts.js':'public/payouts.js'};
 const server=createServer(async(req,res)=>{
+ if(req.url==='/api/session'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({user:state().user}));}
+ if(req.url==='/api/profile'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({email:role+'@example.test',role,joined:'2026-01-01',username:'Fixture',preferredCurrency:'USD',shortCode:'fixture'}));}
+ if(req.url==='/api/payout-feed'){res.setHeader('Content-Type','application/json');return res.end('[]');}
  if(req.url==='/api/state'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(state()));}
  const file=files[new URL(req.url,'http://localhost').pathname];if(!file){res.writeHead(404);return res.end('Fixture route not found');}
  res.setHeader('Content-Type',file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(resolve(file)));
@@ -22,7 +25,7 @@ const server=createServer(async(req,res)=>{
    for(const currentRole of ['worker','admin']){
     role=currentRole;const page=await browser.newPage({viewport:{width:size.width,height:size.height}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.addInitScript(()=>{window.EventSource=class{constructor(){setTimeout(()=>this.onopen?.(),0);}addEventListener(){}close(){}};});
-    await page.goto(base);await page.locator('#tasks .task-row').first().waitFor();
+    await page.goto(base+'/dashboard');await page.locator('#tasks .task-row').first().waitFor();
     assert.equal(await page.locator('#tasks .task-row').count(),7);
     assert.equal(await page.locator('#admin').isVisible(),false);
     assert.equal(await page.locator('#tasks [data-action="claim"]').count(),0);
@@ -58,7 +61,17 @@ const server=createServer(async(req,res)=>{
      await page.locator('#submissions .task-row').click();await page.getByText('Synthetic submission evidence',{exact:true}).waitFor();assert.ok((await page.locator('#task-detail').innerText()).includes('Synthetic submission evidence'));
      await page.screenshot({path:out+'/admin-'+size.name+'-review.png',fullPage:true});
     }
-    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Detail navigation must fit the viewport');assert.deepEqual(errors,[]);await page.close();
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Detail navigation must fit the viewport');assert.deepEqual(errors,[]);
+    await page.goto(base);await page.locator('#open-dashboard').waitFor({state:'visible'});
+    assert.equal(await page.locator('#landing').isVisible(),true);assert.equal(await page.locator('#workspace').isVisible(),false);
+    await page.getByRole('link',{name:'My dashboard',exact:true}).click();await page.locator('#workspace').waitFor({state:'visible'});
+    await page.getByRole('link',{name:'My profile',exact:true}).click();await page.locator('#account-info').waitFor();await page.waitForFunction(()=>document.getElementById('account-info').textContent.includes('@example.test'));
+    await page.getByRole('link',{name:'Dashboard',exact:true}).click();await page.locator('#workspace').waitFor({state:'visible'});
+    assert.equal(new URL(page.url()).pathname,'/dashboard');assert.equal(await page.locator('#auth').isVisible(),false);
+    await page.getByRole('link',{name:'Payouts',exact:true}).click();await page.locator('#payout-feed').waitFor();
+    await page.getByRole('link',{name:'Dashboard',exact:true}).click();await page.locator('#workspace').waitFor({state:'visible'});
+    await page.goBack();await page.goForward();await page.locator('#workspace').waitFor({state:'visible'});assert.equal(await page.locator('#auth').isVisible(),false);
+    assert.deepEqual(errors,[]);await page.close();
    }
   }
   console.log('PASS: desktop and phone task rows, overview, Back/Forward, member/admin sections, private detail, modal and draft preservation.');

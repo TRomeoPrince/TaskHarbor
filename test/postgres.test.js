@@ -23,6 +23,15 @@ test('PostgreSQL: authentication, referrals, hold and final moderation', {skip: 
  const referrerState=()=>fetch(base+'/api/state',{headers:{Cookie:referrer.cookie}}).then(r=>r.json());
  const referralCode=(await referrerState()).profile.short_code;
  const worker=await post('register',{email:'worker@test.local',password:'WorkerPassword123',referralCode});assert.equal(worker.status,200);
+ // Navigation must never destroy or replace a valid session cookie.
+ assert.deepEqual(await (await fetch(base+'/api/session')).json(),{user:null});
+ for(const page of ['/','/dashboard','/dashboard/','/login','/signup','/profile','/payouts','/dashboard']){
+  const response=await fetch(base+page,{headers:{Cookie:worker.cookie}});
+  assert.equal(response.status,200,page);assert.equal(response.headers.get('set-cookie'),null);
+  const session=await (await fetch(base+'/api/session',{headers:{Cookie:worker.cookie}})).json();
+  assert.equal(session.user.role,'worker');assert.equal(session.user.email,'worker@test.local');
+  assert.equal((await fetch(base+'/api/state',{headers:{Cookie:worker.cookie}})).status,200);
+ }
  const stream=await fetch(base+'/api/events',{headers:{Cookie:admin.cookie}});assert.match(stream.headers.get('content-type'),/text\/event-stream/);reader=stream.body.getReader();assert.match(new TextDecoder().decode((await reader.read()).value),/event: change/);
  const event=reader.read();
  const created=await post('tasks',{title:'HTTP test',description:'Instructions',rewardAmount:'2.50',provider:'manual-telegram',externalId:'referral-http-test'},admin.cookie);assert.equal(created.status,200);

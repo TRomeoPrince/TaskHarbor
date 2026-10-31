@@ -121,9 +121,9 @@ export async function scanNotifications(db){
    let recipients,title,body,url;
    if(event.kind==='task'){
     const task=await tx.get('SELECT status,title FROM tasks WHERE id=?',event.ref);if(!task||task.status!=='available')return;
-    recipients=await tx.all("SELECT id,email FROM users WHERE role='worker'");title='New task on TaskHarbor';body='A new task is available. Open TaskHarbor to review the requirements.';url='/?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
+    recipients=await tx.all("SELECT id,email FROM users WHERE role='worker'");title='New task on TaskHarbor';body='A new task is available. Open TaskHarbor to review the requirements.';url='/dashboard?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
    }else if(event.kind==='submission'){
-    recipients=await tx.all("SELECT id,email FROM users WHERE role='admin'");title='Task submission received';body='A member submitted work for review.';url='/?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
+    recipients=await tx.all("SELECT id,email FROM users WHERE role='admin'");title='Task submission received';body='A member submitted work for review.';url='/dashboard?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
    }else{
     const message=await tx.get('SELECT m.sender_id,u.role,t.user_id FROM support_messages m JOIN users u ON u.id=m.sender_id JOIN support_threads t ON t.id=m.thread_id WHERE m.id=?',event.event_key.slice(8));if(!message)return;
     recipients=message.role==='admin'?await tx.all('SELECT id,email FROM users WHERE id=? AND id<>?',message.user_id,message.sender_id):await tx.all("SELECT id,email FROM users WHERE role='admin' AND id<>?",message.sender_id);

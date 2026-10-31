@@ -9,7 +9,7 @@ test('dashboard still renders and connects live updates with an older server res
  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
  let connected=0;
  const oldState={user:{id:'worker',email:'worker@test',role:'worker'},currencies:{USD:2,UGX:0},rates:[{currency:'USD',rate:1000000,updated_at:Date.now()}],wallet:{available:500,pending:0,earned:500,withdrawn:0},tasks:[],submissions:[],withdrawals:[],transactions:[]};
- const context=vm.createContext({document:{getElementById:get,createElement:element,addEventListener(){}},localStorage:{getItem(){return 'USD';},setItem(){}},location:{search:'',origin:'http://localhost'},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,fetch:async()=>({ok:true,json:async()=>oldState}),EventSource:class {constructor(){connected++;}addEventListener(){}close(){}},console});
+ const context=vm.createContext({document:{getElementById:get,createElement:element,addEventListener(){}},localStorage:{getItem(){return 'USD';},setItem(){}},location:{pathname:'/dashboard',search:'',origin:'http://localhost'},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,fetch:async()=>({ok:true,json:async()=>oldState}),EventSource:class {constructor(){connected++;}addEventListener(){}close(){}},console});
  vm.runInContext(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),context);
  await new Promise(resolve=>setTimeout(resolve,10));
  assert.equal(get('notice').textContent,'');assert.match(get('balances').innerHTML,/5\.00/);assert.match(get('exchange-status').textContent,/Restart the app server/);assert.equal(connected,1);assert.equal(get('workspace').hidden,false);
@@ -30,7 +30,7 @@ test('guest welcome, separate auth modes and referral code survive navigation',a
  const elements=new Map();
  const get=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',hidden:false,value:'',dataset:{},prepend(){},focus(){},querySelector(){return {}}});return elements.get(id);};
  let onHashChange;
- const context=vm.createContext({document:{getElementById:get,createElement(){return {querySelector(){return {}}};},addEventListener(){}},localStorage:{getItem(){return null;}},location:{search:'?ref=keep-this-code',hash:''},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(type,fn){if(type==='hashchange')onHashChange=fn;},fetch:async()=>({ok:false,json:async()=>({error:'Please log in'})}),console});
+ const context=vm.createContext({document:{getElementById:get,createElement(){return {querySelector(){return {}}};},addEventListener(){}},localStorage:{getItem(){return null;}},location:{pathname:'/',search:'?ref=keep-this-code',hash:''},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(type,fn){if(type==='hashchange')onHashChange=fn;},fetch:async()=>({ok:false,json:async()=>({error:'Please log in'})}),console});
  vm.runInContext(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),context);
  await new Promise(resolve=>setTimeout(resolve,0));
  assert.equal(get('landing').hidden,false);assert.equal(get('auth').hidden,true);assert.equal(get('workspace').hidden,true);
@@ -53,7 +53,7 @@ test('compact task browsing preserves navigation, private instructions and revie
  const task={id:'gmail-1',title:'CREATE GMAIL',provider:'manual-telegram',description:'Private account instructions',reward:12,status:'claimed',worker_id:'worker',steps:[],fields:[{label:'Supplied password',value:'synthetic-private-value',copy:true}],images:[{id:'synthetic-image',kind:'instruction'}],messages:[],history:[]};
  const second={...task,id:'ai-1',title:'TRAINING AI MODULES',provider:'vetella-faceatlas',description:'A public AI project description.\n\nPAYMENT: Approval required.',reward:700,status:'available',worker_id:null,policy:{public_description:1},fields:[],images:[]};
  const fixture={user:{id:'worker',email:'worker@test',role:'worker'},currencies:{USD:2},rates:[{currency:'USD',rate:1000000,updated_at:Date.now()}],wallet:{available:24,pending:0,earned:24,withdrawn:0},tasks:[task,second],submissions:[],withdrawals:[],transactions:[]};
- const context=vm.createContext({document:{getElementById:get,createElement:element,querySelectorAll(){return [];},addEventListener(){},activeElement:element()},localStorage:{getItem(){return 'USD';},setItem(){}},location:{search:'',hash:'#tasks',origin:'http://localhost'},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(type,fn){listeners.set(type,fn);},fetch:async()=>({ok:true,json:async()=>fixture}),EventSource:class {addEventListener(){}close(){}},console});
+ const context=vm.createContext({document:{getElementById:get,createElement:element,querySelectorAll(){return [];},addEventListener(){},activeElement:element()},localStorage:{getItem(){return 'USD';},setItem(){}},location:{pathname:'/dashboard',search:'',hash:'#tasks',origin:'http://localhost'},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(type,fn){listeners.set(type,fn);},fetch:async()=>({ok:true,json:async()=>fixture}),EventSource:class {addEventListener(){}close(){}},console});
  vm.runInContext(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),context);await new Promise(r=>setTimeout(r,10));
  assert.match(get('tasks').innerHTML,/CREATE GMAIL/);assert.match(get('tasks').innerHTML,/TRAINING AI MODULES/);assert.match(get('tasks').innerHTML,/7\.00/);
  assert.doesNotMatch(get('tasks').innerHTML,/synthetic-private-value|synthetic-image|data-action="claim"/);
@@ -81,4 +81,19 @@ test('compact task browsing preserves navigation, private instructions and revie
  context.location.hash='#task/gmail-1';listeners.get('hashchange')();assert.match(get('task-detail').innerHTML,/Report progress/);
  vm.runInContext("state.user.role='admin';",context);
  context.location.hash='#create';listeners.get('hashchange')();assert.equal(get('admin').hidden,false);assert.equal(get('view-submissions').hidden,true);
+});
+
+test('public home stays public for a signed-in member; expired private navigation preserves its destination',async()=>{
+ async function start(pathname,session){
+  const elements=new Map(),calls=[],redirects=[];
+  const element=()=>({innerHTML:'',textContent:'',hidden:false,value:'',dataset:{},prepend(){},focus(){},addEventListener(){},querySelector(){return element();}});
+  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
+  const context=vm.createContext({document:{getElementById:get,createElement:element,addEventListener(){}},localStorage:{getItem(){return null;}},location:{pathname,search:'',hash:'',replace:p=>redirects.push(p),assign:p=>redirects.push(p)},URLSearchParams,Intl,Date,Number,String,Object,Array,Promise,setTimeout,addEventListener(){},fetch:async url=>{calls.push(url);return {ok:url==='/api/session',json:async()=>url==='/api/session'?{user:session}:{error:'Please log in'}};},EventSource:class{constructor(){throw Error('Public home must not connect workspace events');}},console});
+  vm.runInContext(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),context);await new Promise(r=>setTimeout(r,10));return {get,calls,redirects,context};
+ }
+ const home=await start('/',{id:'member',role:'worker'});assert.equal(home.get('landing').hidden,false);assert.equal(home.get('workspace').hidden,true);assert.equal(home.get('open-dashboard').hidden,false);assert.deepEqual(home.calls,['/api/session']);assert.deepEqual(home.redirects,[]);
+ const privatePage=await start('/dashboard',null);assert.deepEqual(privatePage.redirects,['/login?next=%2Fdashboard']);assert.equal(privatePage.get('auth').hidden,true);
+ const signedInLogin=await start('/login',{id:'member',role:'worker'});assert.deepEqual(signedInLogin.redirects,['/dashboard']);
+ // An external redirect target is never followed after authentication.
+ signedInLogin.context.location.search='?next=%2F%2Fevil.example';assert.equal(vm.runInContext('dashboardDestination()',signedInLogin.context),'/dashboard');
 });
