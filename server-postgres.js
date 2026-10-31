@@ -216,6 +216,7 @@ const server = http.createServer(
           '/': 'index.html',
           '/app.js': 'app.js',
           '/style.css': 'style.css',
+          '/dashboard-v2.css': 'dashboard-v2.css',
           '/payouts': 'payouts.html',
           '/payouts/': 'payouts.html',
           '/profile': 'profile.html',
