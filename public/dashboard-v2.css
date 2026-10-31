@@ -182,3 +182,28 @@ body:has(#auth:not([hidden])) #auth{border:1px solid #e4ecdf;box-shadow:0 20px 6
  #tasks .task-summary{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){button{transition:none}button:hover:not(:disabled){transform:none}}
+
+
+/* Admin mode: a separate operations surface, not the member earnings page. */
+.admin-overview{margin:25px 0 34px;padding:27px 28px;background:linear-gradient(120deg,#eef7ec,#fff8e9);border:1px solid #dcebdc;border-radius:22px;box-shadow:var(--th-shadow)}
+.admin-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.admin-heading h2{font-size:24px;letter-spacing:-.7px;margin:6px 0 6px}
+.admin-heading p:not(.eyebrow){font-size:12px;color:#6b8170;line-height:1.65;margin:0}
+.admin-support-link{color:#1c6950;text-decoration:none;font-size:12px;font-weight:750;padding:11px 15px;border:1px solid #cadece;background:#fff;border-radius:10px;white-space:nowrap}
+.admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0}
+.admin-stats>div{background:#fff;border:1px solid #e0ebe1;border-radius:15px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.admin-stats span{color:#687f6f;font-size:12px;font-weight:650}
+.admin-stats strong{color:#1b634b;font-size:33px;letter-spacing:-1px}
+.admin-stats small{font-size:10px;color:#899d8d}
+.admin-shortcuts{display:flex;flex-wrap:wrap;gap:9px}
+.admin-shortcuts a{background:#e4f1e7;color:#266d50;text-decoration:none;padding:10px 13px;border:1px solid #cfe1d3;border-radius:10px;font-size:11px;font-weight:750}
+.admin-shortcuts a:hover{background:#d5eada}
+.admin-zone .admin-section-heading{border-bottom:1px solid #dae7dc;padding-bottom:15px;margin-bottom:18px}
+.admin-zone .admin-section-heading h2{font-size:25px!important;letter-spacing:-.8px;margin:6px 0}
+.admin-zone .admin-section-heading p:last-child{font-size:12px;color:#6a8170;margin:8px 0}
+.admin-zone .admin-legacy-workflow{background:#fff;border:1px solid #dce8df;border-radius:14px;padding:0;margin:12px 0 26px}
+.admin-zone .admin-legacy-workflow summary{padding:17px;font-weight:700;font-size:12px;color:#567664}
+.admin-zone .admin-legacy-workflow>section{margin:0;border:0;border-top:1px solid #e1e9df;border-radius:0}
+#workspace [hidden]{display:none!important}
+@media(max-width:730px){.admin-overview{padding:20px 17px}.admin-stats{grid-template-columns:1fr 1fr;gap:9px}.admin-stats>div{padding:14px}.admin-stats strong{font-size:27px}.admin-heading{align-items:flex-start;flex-direction:column}}
+@media(max-width:420px){.admin-stats{grid-template-columns:1fr}.admin-shortcuts a{flex:1;text-align:center}}
