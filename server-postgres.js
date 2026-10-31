@@ -214,6 +214,10 @@ const server = http.createServer(
       ) {
         const file = {
           '/': 'index.html',
+          '/dashboard':'index.html',
+          '/dashboard/':'index.html',
+          '/login':'index.html',
+          '/signup':'index.html',
           '/app.js': 'app.js',
           '/style.css': 'style.css',
           '/payouts': 'payouts.html',
@@ -323,6 +327,8 @@ const server = http.createServer(
       );
 
       let result;
+
+      if(path==='/api/session'&&req.method==='GET'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({user:user||null}));}
 
       if (
         path === '/api/register' ||

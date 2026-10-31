@@ -146,3 +146,11 @@ Task browsing is a compact vertical list for both roles, with a brief overview b
 Assigned members can use **Report progress** within their task. FaceAtlas prompts for historical videos (2), new-setting videos (8), English-speaking videos (5), portal status and blockers. These are text self-reports stored in the existing authorized task message history. They neither submit/approve the task nor change balances, deadlines or claim ownership. Follow-up step counts are shown only when configured. Provider approval remains an independent manual check. No percentage is invented for tasks with no structured milestones.
 
 This addition has no schema migration. Admin-only assignee details are omitted from member responses. Progress reports do not collect recordings, passwords or identity documents. Existing API authorization still limits task messages/evidence to the assigned member and administrators. It does not create extra opportunity slots or clear existing claims automatically.
+
+## Public home and session-preserving navigation
+
+`fix/public-home-session` reserves `/` for the welcome page, including when the visitor is signed in. `/dashboard` is the private workspace; `/login` and `/signup` are separate authentication views. The public home checks only the current session and can offer My dashboard; it never fetches wallet/task state or opens workspace live updates. Existing hash-based sign-in/signup links remain compatible.
+
+Dashboard links from Profile, Payouts and Contact point to `/dashboard`; the TaskHarbor brand points Home. Valid sessions are preserved by navigation. A confirmed API 401 sends private pages to `/login?next=...` and login returns only to allowlisted local app paths. Logout explicitly returns to `/`. Browser history restoration rechecks the session. Notification deep links target `/dashboard`.
+
+This patch preserves existing cookie protections, session lifetimes, authorization and all stored records. It has no schema migration of its own. It is based on the compact task/progress branch and does not deploy the separate contacts migration automatically. Deploy matching frontend and backend together, because `/api/session` and the new page aliases are part of this patch. Existing runtime configuration and database remain unchanged.

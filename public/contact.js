@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state,threadId,threadStatus;
-async function api(path,body){const r=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.error||'Request failed');return data;}
+async function api(path,body){const r=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(r.status===401){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search));throw Error('Please sign in to continue.');}if(!r.ok)throw Error(data.error||'Request failed');return data;}
 async function act(fn){try{$('notice').textContent='';await fn();}catch(e){$('notice').textContent=e.message;}}
 const formData=f=>Object.fromEntries(new FormData(f));
 async function inbox(){const data=await api('notifications');$('alerts').innerHTML=data.notifications.length?data.notifications.map(n=>`<article><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><a href="${esc(n.url)}">Open</a> <button type="button" data-read="${esc(n.id)}" ${n.read_at?'disabled':''}>${n.read_at?'Read':'Mark read'}</button></article>`).join(''):'No notifications yet.';}

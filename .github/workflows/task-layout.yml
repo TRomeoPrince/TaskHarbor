@@ -1,9 +1,9 @@
 name: Task dashboard browser checks
 on:
   push:
-    branches: [feature/task-list-navigation]
+    branches: [feature/task-list-navigation, fix/public-home-session]
   pull_request:
-    branches: [feature/contact-notifications]
+    branches: [feature/contact-notifications, feature/task-list-navigation]
 permissions:
   contents: read
 jobs:

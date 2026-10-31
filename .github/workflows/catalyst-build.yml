@@ -1,9 +1,9 @@
 name: Catalyst deployment package
 on:
   push:
-    branches: [feature/catalyst-task-workflows, feature/contact-notifications, feature/task-list-navigation]
+    branches: [feature/catalyst-task-workflows, feature/contact-notifications, feature/task-list-navigation, fix/public-home-session]
   pull_request:
-    branches: [catalyst-neon-staging, feature/catalyst-task-workflows, feature/contact-notifications]
+    branches: [catalyst-neon-staging, feature/catalyst-task-workflows, feature/contact-notifications, feature/task-list-navigation]
   workflow_dispatch:
 permissions:
   contents: read
