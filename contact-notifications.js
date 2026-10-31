@@ -121,11 +121,30 @@ export async function scanNotifications(db){
    let recipients,title,body,url;
    if(event.kind==='task'){
     const task=await tx.get('SELECT status,title FROM tasks WHERE id=?',event.ref);if(!task||task.status!=='available')return;
-    recipients=await tx.all("SELECT id,email FROM users WHERE role='worker'");title='New task on TaskHarbor';body='A new task is available. Open TaskHarbor to review the requirements.';url='/?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
+    recipients=await tx.all("SELECT id,email FROM users WHERE role='worker'");title='New task on TaskHarbor';body='A new task is available. Open TaskHarbor to review the requirements.';url='/dashboard?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
    }else if(event.kind==='submission'){
-    recipients=await tx.all("SELECT id,email FROM users WHERE role='admin'");title='Task submission received';body='A member submitted work for review.';url='/?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
+    recipients=await tx.all("SELECT id,email FROM users WHERE role='admin'");title='Task submission received';body='A member submitted work for review.';url='/dashboard?task='+encodeURIComponent(event.ref)+'#task-'+event.ref;
    }else{
-    const message=await tx.get('SELECT m.sender_id,u.role,t.user_id FROM support_messages m JOIN users u ON u.id=m.sender_id JOIN support_threads t ON t.id=m.thread_id WHERE m.id=?',event.event_key.slice(8));if(!message)return;
+    const message=await tx.get('SELECT m.sender_id,m.content,u.role,t.user_id,t.subject,author.email sender_email,owner.email owner_email FROM support_messages m JOIN users u ON u.id=m.sender_id JOIN support_threads t ON t.id=m.thread_id JOIN users author ON author.id=m.sender_id JOIN users owner ON owner.id=t.user_id WHERE m.id=?',event.event_key.slice(8));if(!message)return;
+    // Support correspondence is transactional, separate from general alerts.
+    // No outgoing email is created until SMTP has been configured.
+    const cfg=notificationConfig();
+    if(cfg.emailReady){
+     const inbox=process.env.SUPPORT_INBOX_EMAIL||process.env.SUPPORT_EMAIL||'';
+     const destination=message.role==='admin'?message.owner_email:inbox;
+     const recipientId=message.role==='admin'?message.user_id:(await tx.get("SELECT id FROM users WHERE role='admin' ORDER BY created_at LIMIT 1"))?.id;
+     if(recipientId&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)&&!/[\r\n]/.test(destination)){
+      const subject=String(message.subject).replace(/[\r\n]/g,' ').slice(0,150);
+      const payload=JSON.stringify({
+       title:message.role==='admin'?'Re: TaskHarbor support — '+subject:'TaskHarbor support request — '+subject,
+       body:(message.role==='admin'?'Your TaskHarbor support team replied.':'A TaskHarbor member sent a support message.\nFrom: '+message.sender_email)+
+         '\n\nSubject: '+subject+'\n\n'+message.content,
+       url:'/contact?thread='+encodeURIComponent(event.ref),
+       supportTransactional:true
+      });
+      await tx.run("INSERT INTO notification_outbox(id,user_id,event_key,channel,target,payload) VALUES(?,?,?,'email',?,?) ON CONFLICT DO NOTHING",randomUUID(),recipientId,event.event_key+':service',destination,payload);
+     }
+    }
     recipients=message.role==='admin'?await tx.all('SELECT id,email FROM users WHERE id=? AND id<>?',message.user_id,message.sender_id):await tx.all("SELECT id,email FROM users WHERE role='admin' AND id<>?",message.sender_id);
     title='TaskHarbor support reply';body='You have a new message in your support inbox.';url='/contact?thread='+encodeURIComponent(event.ref);
    }
@@ -133,7 +152,7 @@ export async function scanNotifications(db){
     await tx.run('INSERT INTO notification_inbox(id,user_id,event_key,title,body,url) VALUES(?,?,?,?,?,?) ON CONFLICT DO NOTHING',randomUUID(),person.id,event.event_key,title,body,url);
     const prefs=await tx.get('SELECT * FROM notification_preferences WHERE user_id=?',person.id);if(!prefs)continue;
     const payload=JSON.stringify({title,body,url});
-    if(prefs.email_enabled)await tx.run("INSERT INTO notification_outbox(id,user_id,event_key,channel,target,payload) VALUES(?,?,?,'email',?,?) ON CONFLICT DO NOTHING",randomUUID(),person.id,event.event_key,person.email,payload);
+    if(prefs.email_enabled&&event.kind!=='support')await tx.run("INSERT INTO notification_outbox(id,user_id,event_key,channel,target,payload) VALUES(?,?,?,'email',?,?) ON CONFLICT DO NOTHING",randomUUID(),person.id,event.event_key,person.email,payload);
     if(prefs.push_enabled)for(const sub of await tx.all('SELECT id FROM push_subscriptions WHERE user_id=?',person.id))await tx.run("INSERT INTO notification_outbox(id,user_id,event_key,channel,target,payload) VALUES(?,?,?,'push',?,?) ON CONFLICT DO NOTHING",randomUUID(),person.id,event.event_key,sub.id,payload);
    }
   });
@@ -143,7 +162,7 @@ let transporter;
 async function sendEmail(row,payload){
  const {default:nodemailer}=await import('nodemailer');
  transporter??=nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||587),secure:process.env.SMTP_SECURE==='true',requireTLS:process.env.SMTP_SECURE!=='true',auth:process.env.SMTP_USER?{user:process.env.SMTP_USER,pass:process.env.SMTP_PASSWORD}:undefined,connectionTimeout:10000,socketTimeout:15000});
- await transporter.sendMail({from:process.env.MAIL_FROM,to:row.target,subject:payload.title,text:payload.body+'\n\n'+new URL(payload.url,origin()).href+'\n\nManage alerts: '+origin()+'/contact',messageId:'<'+row.id+'@'+new URL(origin()).hostname+'>',disableFileAccess:true,disableUrlAccess:true});
+ await transporter.sendMail({from:process.env.MAIL_FROM,to:row.target,replyTo:payload.supportTransactional?(process.env.SUPPORT_EMAIL||undefined):undefined,subject:payload.title,text:payload.body+'\n\n'+new URL(payload.url,origin()).href+(payload.supportTransactional?'\n\nFor an archived conversation, reply inside TaskHarbor. Email replies are not automatically imported.':'\n\nManage alerts: '+origin()+'/contact'),messageId:'<'+row.id+'@'+new URL(origin()).hostname+'>',disableFileAccess:true,disableUrlAccess:true});
 }
 async function sendPush(row,payload,subscription){
  const {default:webpush}=await import('web-push');
@@ -165,7 +184,7 @@ export async function deliverNotifications(db,senders={}){
    }
    let sub;
    if(row.channel==='push')sub=await db.get('SELECT subscription FROM push_subscriptions WHERE id=? AND user_id=?',row.target,row.user_id);
-   if((row.channel==='email'&&!payload.confirmation&&!prefs?.email_enabled)||(row.channel==='push'&&(!prefs?.push_enabled||!sub))){await db.run("UPDATE notification_outbox SET status='cancelled',locked_until=0 WHERE id=?",row.id);continue;}
+   if((row.channel==='email'&&!payload.confirmation&&!payload.supportTransactional&&!prefs?.email_enabled)||(row.channel==='push'&&(!prefs?.push_enabled||!sub))){await db.run("UPDATE notification_outbox SET status='cancelled',locked_until=0 WHERE id=?",row.id);continue;}
    if(!senders[row.channel]&&!notificationConfig()[row.channel==='push'?'pushReady':'emailReady'])throw Error('Channel not configured');
    if(row.channel==='email')await (senders.email||sendEmail)(row,payload);
    else await (senders.push||sendPush)(row,payload,JSON.parse(sub.subscription));
