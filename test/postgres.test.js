@@ -19,6 +19,32 @@ test('PostgreSQL: authentication, referrals, hold and final moderation', {skip: 
  try{
  async function post(path,data,cookie=''){const r=await fetch(base+'/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie,Origin:base},body:JSON.stringify(data)});return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
  const admin=await post('login',{email:'admin@local.test',password:'IntegrationTestOnly123'});assert.equal(admin.status,200);
+ // Regression: www -> apex navigation must not discard a valid authenticated session.
+ // Both origins are exercised against the same disposable PostgreSQL database.
+ const crossLogin=await fetch(base+'/api/login',{method:'POST',headers:{
+  Host:'www.taskharbor.cc.cd',Origin:'https://www.taskharbor.cc.cd','Content-Type':'application/json'
+ },body:JSON.stringify({email:'admin@local.test',password:'IntegrationTestOnly123'})});
+ assert.equal(crossLogin.status,200);
+ const sharedCookie=crossLogin.headers.get('set-cookie')||'';
+ assert.match(sharedCookie,/Domain=taskharbor\.cc\.cd/);
+ assert.match(sharedCookie,/SameSite=Lax/);
+ assert.match(sharedCookie,/Secure/);
+ const sessionCookie=sharedCookie.split(';')[0];
+ for(const site of ['taskharbor.cc.cd','www.taskharbor.cc.cd']){
+  for(const route of ['/api/state','/api/contact']){
+   const response=await fetch(base+route,{headers:{Host:site,Cookie:sessionCookie}});
+   assert.equal(response.status,200,site+' '+route+' must keep session');
+  }
+ }
+ // A stale host-specific cookie must not shadow the new valid domain cookie.
+ const overlapped='session='+('0'.repeat(64))+'; '+sessionCookie;
+ assert.equal((await fetch(base+'/api/state',{headers:{Host:'www.taskharbor.cc.cd',Cookie:overlapped}})).status,200);
+ const signedOut=await fetch(base+'/api/logout',{method:'POST',headers:{
+  Host:'taskharbor.cc.cd',Origin:'https://taskharbor.cc.cd',Cookie:overlapped,'Content-Type':'application/json'
+ },body:'{}'});
+ assert.equal(signedOut.status,200);
+ assert.equal((await fetch(base+'/api/state',{headers:{Host:'www.taskharbor.cc.cd',Cookie:sessionCookie}})).status,401);
+
  const referrer=await post('register',{email:'referrer@test.local',password:'ReferrerPassword123'});assert.equal(referrer.status,200);
  const referrerState=()=>fetch(base+'/api/state',{headers:{Cookie:referrer.cookie}}).then(r=>r.json());
  const referralCode=(await referrerState()).profile.short_code;
