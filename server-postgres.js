@@ -217,6 +217,7 @@ const server = http.createServer(
           '/app.js': 'app.js',
           '/style.css': 'style.css',
           '/dashboard-v2.css': 'dashboard-v2.css',
+          '/contact-v3.css': 'contact-v3.css',
           '/payouts': 'payouts.html',
           '/payouts/': 'payouts.html',
           '/profile': 'profile.html',
@@ -255,12 +256,14 @@ const server = http.createServer(
         );
       }
 
-      const publicOrigin =
-        process.env.PUBLIC_ORIGIN
-          ? new URL(
-              process.env.PUBLIC_ORIGIN
-            ).origin
-          : null;
+      const publicOrigin = process.env.PUBLIC_ORIGIN ? new URL(process.env.PUBLIC_ORIGIN).origin : null;
+      // One cookie for the canonical site and its www hostname, without sending
+      // production cookies to Catalyst's preview hostname or unrelated domains.
+      const requestHost = (req.headers.host || '').split(':')[0].toLowerCase();
+      const sharedSite = requestHost === 'taskharbor.cc.cd' || requestHost === 'www.taskharbor.cc.cd';
+      const cookieDomain = sharedSite ? '; Domain=taskharbor.cc.cd' : '';
+      const cookieSecure = sharedSite || publicOrigin?.startsWith('https:') ? '; Secure' : '';
+      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieDomain + cookieSecure;
 
       const allowedOrigins = new Set([
         `http://${req.headers.host}`,
@@ -478,13 +481,7 @@ const server = http.createServer(
 
         res.setHeader(
           'Set-Cookie',
-          `session=${sessionToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${
-            publicOrigin?.startsWith(
-              'https:'
-            )
-              ? '; Secure'
-              : ''
-          }`
+          `session=${sessionToken}${cookieOptions}; Max-Age=86400`
         );
 
         result = { ok: true };
@@ -743,7 +740,7 @@ const server = http.createServer(
 
             res.setHeader(
               'Set-Cookie',
-              'session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+              `session=${cookieOptions}; Max-Age=0`
             );
           } else if (
             path === '/api/claim'
