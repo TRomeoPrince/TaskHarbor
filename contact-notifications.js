@@ -10,7 +10,7 @@ export function notificationConfig(){return {
  pushReady:Boolean(process.env.VAPID_PUBLIC_KEY&&process.env.VAPID_PRIVATE_KEY&&process.env.VAPID_SUBJECT),
  emailReady:Boolean(process.env.SMTP_HOST&&process.env.MAIL_FROM),
  publicKey:process.env.VAPID_PUBLIC_KEY||'',
- supportEmail:process.env.SUPPORT_EMAIL||'admin@taskharbor.cc.cd',supportTelegram:/^https:\/\/t\.me\/[a-zA-Z0-9_+\-]{5,100}$/.test(process.env.SUPPORT_TELEGRAM_URL||'')?process.env.SUPPORT_TELEGRAM_URL:''
+ supportEmail:process.env.SUPPORT_EMAIL||'',supportTelegram:/^https:\/\/t\.me\/[a-zA-Z0-9_+\-]{5,100}$/.test(process.env.SUPPORT_TELEGRAM_URL||'')?process.env.SUPPORT_TELEGRAM_URL:''
 };}
 export function validateSubscription(value){
  if(!value||typeof value!=='object')throw Error('Invalid push subscription');
