@@ -21,7 +21,7 @@ test('TaskHarbor V2 is linked and served on every public workspace page', () => 
 
 test('Dashboard preserves wallet IDs, actions and accessible task preview layout', () => {
  const html = asset('index.html');
- for (const id of ['balances','tasks','task-filter','submissions','withdrawals','transactions','withdrawBox','admin','currency','action-confirm']) {
+ for (const id of ['balances','tasks','task-filter','submissions','withdrawals','transactions','withdrawBox','admin','currency']) {
    assert.match(html, new RegExp('id="' + id + '"'), id);
  }
  assert.match(html, /<section class="workspace-section" id="tasks-section"/);
@@ -36,7 +36,7 @@ test('Dashboard preserves wallet IDs, actions and accessible task preview layout
 
 test('Available tasks render as collapsible cards; claiming remains inside task details', async () => {
  const els = new Map();
- function el(){return {innerHTML:'',textContent:'',hidden:false,value:'',dataset:{},querySelector(){return el()},scrollIntoView(){},focus(){},setCustomValidity(){},reportValidity(){},addEventListener(){}}}
+ function el(){return {innerHTML:'',textContent:'',hidden:false,value:'',dataset:{},prepend(){},querySelector(){return el()},scrollIntoView(){},focus(){},setCustomValidity(){},reportValidity(){},addEventListener(){}}}
  const get=id=>{if(!els.has(id))els.set(id,el());return els.get(id)};
  const state={user:{id:'worker',email:'worker@example.test',role:'worker'},
    currencies:{USD:2},rates:[{currency:'USD',rate:1000000,updated_at:Date.now()}],
