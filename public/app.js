@@ -4,7 +4,7 @@ let state,events,currency=localStorage.getItem('currency')||'USD',loading=false,
 const fmt=(n,c='USD',digits=2)=>new Intl.NumberFormat(undefined,{style:'currency',currency:c}).format(n/10**digits);
 function rate(){return state?.rates.find(r=>r.currency===currency&&(currency==='USD'||Date.now()-r.updated_at<7*86400000));}
 function money(cents){const r=rate();return r?new Intl.NumberFormat(undefined,{style:'currency',currency}).format(cents/100*r.rate/1000000):fmt(cents);}
-async function api(path,body){const r=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw new Error(data.error);return data;}
+async function api(path,body){const r=await fetch('/api/'+path,body===undefined?{credentials:'same-origin',cache:'no-store'}:{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok){const error=new Error(data.error||'Unable to reach TaskHarbor');error.status=r.status;throw error;}return data;}
 async function act(fn){try{$('notice').textContent='';await fn();}catch(e){$('notice').textContent=e.message;}}
 function fields(form){return Object.fromEntries(new FormData(form));}
 function button(action,id,label,decision=''){return `<button data-action="${action}" data-id="${esc(id)}" data-decision="${decision}">${label}</button>`;}
@@ -98,6 +98,22 @@ function setHTML(id,html){if($(id).innerHTML!==html)$(id).innerHTML=html;}
 function applyTaskFilter(){const filter=$('task-filter')?.value||'all';document.querySelectorAll?.('#tasks .task-listing')?.forEach(item=>{item.hidden=filter!=='all'&&item.dataset.status!==filter;});}
 $('task-filter')?.addEventListener?.('change',applyTaskFilter);
 function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('main-nav').hidden=false;$('guest-nav').hidden=true;$('landing').hidden=true;$('identity').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
+ $('admin-overview').hidden=!admin;
+ for(const id of ['balances'])$(id).hidden=admin;
+ document.querySelector('.wallet-panel-title')?.toggleAttribute('hidden',admin);
+ document.querySelector('.wallet-policy')?.toggleAttribute('hidden',admin);
+ document.querySelector('.workspace-tools')?.toggleAttribute('hidden',admin);
+ $('referral-box').hidden=admin;
+ $('transactions-section').hidden=admin;
+ $('tasks-section').querySelector('h2').textContent=admin?'Task registry':'Find work';
+ if(admin){
+  $('admin-task-count').textContent=String(s.tasks.filter(t=>t.status==='available').length);
+  $('admin-review-count').textContent=String(s.submissions.filter(t=>t.status==='pending').length);
+  $('admin-withdrawal-count').textContent=String(s.withdrawals.filter(w=>w.status==='requested').length);
+ }
+ $('workspace-hero-title').innerHTML=admin?'Keep work <em>moving.</em>':'Every task moves<br>you <em>forward.</em>';
+ $('workspace-hero-caption').textContent=admin?'Manage opportunities, review submissions and support your members from one secure workspace.':'Explore opportunities, follow your submissions, and see exactly where your earnings stand. Everything in one clear workspace.';
+ $('workspace-hero-links').hidden=admin;
  if(!admin&&s.profile?.preferred_currency)currency=s.profile.preferred_currency;
  if(admin||!(currency in s.currencies))currency='USD';$('currency').disabled=admin;
  const opts=Object.keys(s.currencies).sort().map(c=>`<option value="${c}">${c}${c!=='USD'&&!s.rates.some(r=>r.currency===c&&Date.now()-r.updated_at<7*86400000)?' — rate unavailable':''}</option>`).join('');setHTML('currency',opts);$('currency').value=currency;
@@ -108,7 +124,7 @@ function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('
  const limit=withdrawalLimit();$('withdraw-amount').max=String(limit??0);
  $('withdraw-limit').textContent=limit===null?'Available withdrawal: select USD while exchange rates are unavailable.':`Maximum withdrawal: ${new Intl.NumberFormat(undefined,{style:'currency',currency}).format(limit)} (${fmt(s.wallet.available)} USD available).`;
  validateWithdrawal();
- if(s.referrals&&s.profile){$('referral-box').hidden=admin;$('referral-link').value=location.origin+(s.profile.short_code?'/r/'+encodeURIComponent(s.profile.short_code):'/?ref='+encodeURIComponent(s.profile.referral_code));$('referral-info').textContent=s.referrals.policy.firstMicros===s.referrals.policy.laterMicros?`Earn USD ${(s.referrals.policy.firstMicros/1000000).toFixed(2)} per approved email task completed by a referred member, including after their first 30 days. Rewards are paid after the 72-hour hold and final moderation approval.`:`Earn USD ${(s.referrals.policy.firstMicros/1000000).toFixed(6)} per approved email task submitted during a referred member’s first 30 days, then USD ${(s.referrals.policy.laterMicros/1000000).toFixed(6)}. Rewards are paid after the 72-hour hold and final moderation approval.`;$('referral-stats').textContent=`${s.profile.chosen_username?'Username':'Account'}: ${s.profile.display_name||s.user.email.replace(/^(.).*(@.*)$/,'$1xxxx$2')} · Referred members: ${s.referrals.count} · Total rewards: USD ${(s.referrals.totalMicros/1000000).toFixed(6)} · Fractional remainder: USD ${(s.referrals.carryMicros/1000000).toFixed(6)}.`;}
+ if(!admin&&s.referrals&&s.profile){$('referral-box').hidden=false;$('referral-link').value=location.origin+(s.profile.short_code?'/r/'+encodeURIComponent(s.profile.short_code):'/?ref='+encodeURIComponent(s.profile.referral_code));$('referral-info').textContent=s.referrals.policy.firstMicros===s.referrals.policy.laterMicros?`Earn USD ${(s.referrals.policy.firstMicros/1000000).toFixed(2)} per approved email task completed by a referred member, including after their first 30 days. Rewards are paid after the 72-hour hold and final moderation approval.`:`Earn USD ${(s.referrals.policy.firstMicros/1000000).toFixed(6)} per approved email task submitted during a referred member’s first 30 days, then USD ${(s.referrals.policy.laterMicros/1000000).toFixed(6)}. Rewards are paid after the 72-hour hold and final moderation approval.`;$('referral-stats').textContent=`${s.profile.chosen_username?'Username':'Account'}: ${s.profile.display_name||s.user.email.replace(/^(.).*(@.*)$/,'$1xxxx$2')} · Referred members: ${s.referrals.count} · Total rewards: USD ${(s.referrals.totalMicros/1000000).toFixed(6)} · Fractional remainder: USD ${(s.referrals.carryMicros/1000000).toFixed(6)}.`;}
  const ugx=s.rates.find(r=>r.currency==='UGX'&&Date.now()-r.updated_at<7*86400000);
  $('uganda-payout-policy').textContent=`For Ugandan networks, the minimum mobile money payout is UGX 1,000${ugx?` (approximately ${fmt(Math.round(1000/(ugx.rate/1000000)*100))} USD at the displayed reference rate)` : ''}. Smaller payouts are delivered as airtime.`;
  $('withdraw-unit-hint').textContent=currency==='USD'?'Enter the amount you want to withdraw in USD.':`Enter the amount you want to withdraw in ${currency}${s.currencies[currency]===0?', using whole units':''}. To enter an amount in dollars, select USD. Local equivalents are estimates.`;
@@ -119,7 +135,7 @@ function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('
  setHTML('withdrawals',s.withdrawals.map(w=>`<div class="row"><strong>${fmt(w.amount)} USD</strong> · ${esc(w.status)}<p>${w.settlement==='USD'?'USD payment':w.currency?'Legacy request — original local payout terms retained':'USD payment'}${w.currency?` · ${w.settlement==='USD'?'Estimated equivalent at request':'Original local amount'}: ${fmt(w.local_minor,w.currency,s.currencies[w.currency])} · Reference rate: ${w.rate/1000000} ${esc(w.currency)} / USD`:''}</p><p>${esc(w.email||'')} ${esc(w.destination)}</p><p>${esc(w.reference||'Awaiting processing')}</p><span class="id">${esc(w.id)}</span><br>${admin&&w.status==='requested'?button('payout',w.id,'Record payment','paid')+button('payout',w.id,'Reject & refund','rejected'):''}</div>`).join('')||'<p>No withdrawals yet.</p>');
  setHTML('transactions',s.transactions.map(t=>`<div class="row">${esc(t.kind)} <strong>${money(t.amount)}</strong> <span class="muted">(${fmt(t.amount)} recorded)</span> · ${esc(t.created_at)} UTC<div class="id">${esc(t.id)}</div></div>`).join('')||'<p>No transactions yet.</p>');
 }
-async function load(){if(loading){reload=true;return;}loading=true;try{state=await api('state');render();startLive();const target=new URLSearchParams(location.search).get('task');if(target)document.getElementById('task-'+target)?.scrollIntoView?.({block:'center'});}catch(e){if(e.message==='Please log in'){events?.close();events=null;state=null;$('main-nav').hidden=true;showGuestPage();$('workspace').hidden=true;$('logout').hidden=true;}else throw e;}finally{loading=false;if(reload){reload=false;load().catch(e=>$('notice').textContent=e.message);}}}
+async function load(){if(loading){reload=true;return;}loading=true;try{state=await api('state');render();startLive();const target=new URLSearchParams(location.search).get('task');if(target)document.getElementById('task-'+target)?.scrollIntoView?.({block:'center'});}catch(e){if(e.status===401||e.message==='Please log in'){events?.close();events=null;state=null;$('main-nav').hidden=true;showGuestPage();$('workspace').hidden=true;$('logout').hidden=true;$('notice').textContent='Your session could not be verified. Please sign in again; your account data is preserved.';}else throw e;}finally{loading=false;if(reload){reload=false;load().catch(e=>$('notice').textContent=e.message);}}}
 load().catch(e=>$('notice').textContent=e.message);
 
 // Referral copy controls are bundled into each page's main script.
