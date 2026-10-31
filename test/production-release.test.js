@@ -36,7 +36,7 @@ test('admin dashboard uses operational data rather than member wallet panels',()
   assert.match(html,new RegExp('id="'+id+'"'));
  }
  assert.match(js,/\$\('admin-overview'\)\.hidden=!admin/);
- assert.match(js,/\$\('balances'\)\]\.hidden=admin/);
+ assert.match(js,/for\(const id of \['balances'\]\)\$\(id\)\.hidden=admin/);
  assert.match(js,/\$\('referral-box'\)\.hidden=admin/);
  assert.match(js,/credentials:'same-origin'/);
 });
