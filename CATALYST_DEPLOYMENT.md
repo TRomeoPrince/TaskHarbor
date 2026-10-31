@@ -128,3 +128,28 @@ The worker scans every 30 seconds independently of publish/submit requests. Sour
 Before rollout, run PostgreSQL CI, check member-to-member privacy and admin support replies, then test opt-in, confirmation, push delivery on phone/PC, opt-out and delivery failures against approved test accounts. Do not enable email/push for existing members automatically. Do not backfill historical alerts or subscribe the administrator's browser without their action. New notification links target the relevant task card/support conversation, whose normal authorization remains in force.
 
 ImprovMX receiving: configure the domain MX records for mx1.improvmx.com (10) and mx2.improvmx.com (20), plus its SPF include. Forwarding is separate from app notification sending. The ImprovMX Free plan has no SMTP sends; do not configure a forwarding alias as an SMTP login. An authorized sending service/account is still required. Telegram channel creation and its final link must be verified in the owner account before setting SUPPORT_TELEGRAM_URL.
+
+
+## Dashboard route and support email (October 31, 2026)
+
+The signed-in workspace has an explicit `/dashboard` and `/dashboard/` URL. The home page `/` remains the public welcome and sign-in entry point; successful sign-in normalizes the address bar to `/dashboard`, clearing stale `#sign-in` and `#sign-up` fragments. All primary navigation links point to the new route. The same existing session cookie is used; no accounts, balances, session rows, tasks, or payments are migrated. Keep `PUBLIC_ORIGIN=https://www.taskharbor.cc.cd` consistent with the actual canonical site and validate on both www and apex hostnames.
+
+**Transactional support correspondence** (distinct from opt-in marketing/task alerts):
+- User submits a support conversation/message on `/contact`, or an administrator replies within the authenticated support console.
+- The existing notifications worker enqueues a durable email to the owner's verified business inbox for member messages, and emails the originating member at their registered address for administrator replies. The worker retries provider outages. It does not send email until all mandatory mail infrastructure is configured.
+- Set `SUPPORT_EMAIL=admin@taskharbor.cc.cd` **only after the receiving mailbox or forwarding alias has been verified**. Set `SUPPORT_INBOX_EMAIL` to the same verified address, or another verified team inbox, to direct notifications. Both directions require a configured support inbox.
+- Set `SMTP_HOST`, `SMTP_PORT` (usually 587), `SMTP_SECURE` (`false` with STARTTLS for 587), `SMTP_USER`, `SMTP_PASSWORD`, and `MAIL_FROM` for an authenticated outbound sender. The receiving MX/forwarder (e.g., ImprovMX) alone **cannot send** outgoing replies. Verify the sender's domain and configure SPF, DKIM and DMARC as required by the sending provider. Never commit any SMTP credentials or tokens.
+- The `MAIL_FROM` address must be authorized by the SMTP provider. For brand-consistent delivery use `TaskHarbor <admin@taskharbor.cc.cd>` or a verified support subdomain sender; configure sender/display name through the provider as needed.
+- Support emails include conversation text and a link to the private TaskHarbor thread. Do not include account passwords, access tokens, or sensitive identification files in support messages. URLs remain subject to normal account authorization.
+- Admin replies **within TaskHarbor** are automatically emailed to the member and recorded in its audit trail. If the administrator instead replies directly from Gmail/Outlook, that email is **not** imported into the TaskHarbor thread; inbound mail ingestion/webhooks are a separate future feature.
+- Support emails are considered service correspondence initiated by a worker, and do not depend on preferences for optional new-task email alerts. General alerts still honor email confirmation and opt-out.
+- Email failures do not reverse or duplicate support messages. Inspect `notification_outbox` for pending/sent/failed delivery status when diagnosing. Queue entries deduplicate by event key and recipient.
+
+**Acceptance checks after AppSail deployment**:
+1. Sign in at `https://www.taskharbor.cc.cd/#sign-in` and confirm URL becomes `https://www.taskharbor.cc.cd/dashboard`.
+2. Navigate Dashboard → Payouts → Profile → Contact → Dashboard without any new sign-in, including with hard reload. Test apex/www hostname links and a fresh browser profile.
+3. Check member/admin role separation, private threads, wallet balances, and task claims.
+4. With verified SMTP/receiving inbox, send a support message from a *test member*. Confirm it reaches the configured TaskHarbor inbox; reply **inside the admin support console** and confirm receipt by that test member email. Ensure neither email is sent twice.
+5. Without SMTP, verify messages remain available in the in-app support inbox and no misleading email-delivery claims are shown.
+
+Release gate: full GitHub PostgreSQL tests and actual live browser checks are both required before describing email delivery and navigation as production-verified.
