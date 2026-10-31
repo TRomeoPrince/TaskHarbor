@@ -1,9 +1,9 @@
 name: TaskHarbor Catalyst PostgreSQL workflow tests
 on:
   push:
-    branches: [feature/catalyst-task-workflows]
+    branches: [feature/catalyst-task-workflows, feature/contact-notifications]
   pull_request:
-    branches: [catalyst-neon-staging]
+    branches: [catalyst-neon-staging, feature/catalyst-task-workflows]
   workflow_dispatch:
 jobs:
   test:

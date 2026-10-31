@@ -107,3 +107,24 @@ It introduces **two additive PostgreSQL tables**, `task_policies` and `task_comp
 7. TaskHarbor's operational USD ledger is not a payment gateway; actual mobile-money/airtime settlement remains manual.
 
 The separate VeTella FaceAtlas project has its **own** external approval, minimum-ten-contributions and payment conditions. Do not use Telegram-source compensation to override them. Task-specific deadline settings do not themselves implement a multi-contributor listing or automatic contractor reconciliation.
+
+## Contact, support and opt-in notifications
+
+`feature/contact-notifications` adds private phone details, a member/admin support inbox and opt-in alerts. Administrators can see saved contact numbers; other members cannot. Support messages never include private task instructions in outgoing alerts. New tasks notify members; submissions notify admins; support replies notify the relevant participant. `/contact` shows an in-app alert inbox even when external delivery is not configured.
+
+Apply `contacts-schema.sql` transactionally before deploying this build. `neon-schema.sql` also includes the same additive definitions for fresh development databases. Test on a separate Neon branch first. The installation timestamp intentionally excludes historical tasks/submissions from alerts. No account, task, evidence, balance, referral or withdrawal migration is performed. No automatic credits or payments are added.
+
+Configure these server-only environment values in AppSail:
+
+- `SUPPORT_EMAIL`: public support email (default `admin@taskharbor.cc.cd`). `SUPPORT_TELEGRAM_URL`: optional verified https://t.me/ channel link. No WhatsApp contact is offered. The private inbox remains available.
+- `PUBLIC_ORIGIN`: existing canonical HTTPS site origin.
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`: generate a persistent keypair using `npx web-push generate-vapid-keys`; use a valid mailto/HTTPS subject. Keep the private key server-only. Each device must opt in; iOS users must open an installed Home Screen web app on a supported iOS version.
+- `SMTP_HOST`, `SMTP_PORT` (default 587), `SMTP_SECURE` (`true` for implicit TLS/465), `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`: an authorized sending account with verified domain/sender. Non-implicit SMTP requires STARTTLS. Do not use a member's email as the sender.
+
+With missing delivery configuration, the UI reports setup is pending and disables that channel. Email opt-in sends a one-time confirmation valid for 24 hours; only the signed-in owner can redeem it. Enabling email must be completed by the member. Public support details and a sender account still need to be supplied by the owner before real outbound delivery can be verified.
+
+The worker scans every 30 seconds independently of publish/submit requests. Source keys, inbox rows and delivery jobs deduplicate repeated scans; jobs use row locks and a five-minute delivery lease. Failures retry up to five times with backoff; expired push endpoints are removed. Disabling a channel cancels pending alerts and delivery rechecks consent. Provider acceptance followed by a process crash can still cause a retry: SMTP/Web Push do not offer end-to-end exactly-once delivery. Push tags and stable email Message-IDs help clients group duplicates. Use one AppSail instance for existing SSE behavior; the outbox itself supports concurrent workers.
+
+Before rollout, run PostgreSQL CI, check member-to-member privacy and admin support replies, then test opt-in, confirmation, push delivery on phone/PC, opt-out and delivery failures against approved test accounts. Do not enable email/push for existing members automatically. Do not backfill historical alerts or subscribe the administrator's browser without their action. New notification links target the relevant task card/support conversation, whose normal authorization remains in force.
+
+ImprovMX receiving: configure the domain MX records for mx1.improvmx.com (10) and mx2.improvmx.com (20), plus its SPF include. Forwarding is separate from app notification sending. The ImprovMX Free plan has no SMTP sends; do not configure a forwarding alias as an SMTP login. An authorized sending service/account is still required. Telegram channel creation and its final link must be verified in the owner account before setting SUPPORT_TELEGRAM_URL.
