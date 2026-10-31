@@ -728,13 +728,14 @@ const server = http.createServer(
           if (
             path === '/api/logout'
           ) {
-            await db.run(
-              `
-              DELETE FROM sessions
-              WHERE token=?
-              `,
-              token
-            );
+            // Clear every presented session belonging to this account, so
+            // old host-only cookies cannot silently sign the user back in.
+            for (const activeToken of cookieTokens) {
+              await db.run(
+                'DELETE FROM sessions WHERE token=? AND user_id=?',
+                activeToken, user.id
+              );
+            }
 
             res.setHeader(
               'Set-Cookie',
