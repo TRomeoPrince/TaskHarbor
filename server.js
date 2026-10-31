@@ -143,6 +143,8 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&!path.startsWith('/api/')){
   const file={
   '/':'index.html',
+  '/dashboard':'index.html',
+  '/dashboard/':'index.html',
   '/app.js':'app.js',
   '/style.css':'style.css',
           '/dashboard-v2.css': 'dashboard-v2.css',

@@ -1,7 +1,7 @@
 name: TaskHarbor Catalyst PostgreSQL workflow tests
 on:
   push:
-    branches: [feature/catalyst-task-workflows, feature/contact-notifications, design/taskharbor-professional-v2, release/taskharbor-professional-20261031]
+    branches: [feature/catalyst-task-workflows, feature/contact-notifications, design/taskharbor-professional-v2, release/taskharbor-professional-20261031, fix/dashboard-route-support-email-20261031]
   pull_request:
     branches: [catalyst-neon-staging, feature/catalyst-task-workflows, feature/contact-notifications]
   workflow_dispatch:

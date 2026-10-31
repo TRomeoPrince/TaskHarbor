@@ -58,5 +58,22 @@ test('PostgreSQL: private contacts/support, opt-in delivery, deduplication and r
   await contactRoute(db,worker,'/api/notification-preferences',{emailEnabled:false,pushEnabled:false},'POST');
   await db.run("INSERT INTO tasks(id,title,description,reward) VALUES('after-optout','More work','Details',100)");await scanNotifications(db);
   assert.equal(Number((await db.get("SELECT count(*) n FROM notification_outbox WHERE user_id='worker' AND event_key='task:after-optout'")).n),0);
+  // Transactional support correspondence does not depend on a worker's
+  // opt-in to optional task alerts. It requires a real configured inbox.
+  process.env.SUPPORT_INBOX_EMAIL='support-team@test.invalid';
+  process.env.SUPPORT_EMAIL='support-team@test.invalid';
+  const supportTicket=await contactRoute(db,worker,'/api/support',{subject:'Task question',content:'Please explain the task deadline'},'POST');
+  await contactRoute(db,admin,'/api/support-message',{threadId:supportTicket.threadId,content:'The deadline is listed in your task details'},'POST');
+  await scanNotifications(db);
+  const supportMail=await db.all("SELECT target,payload FROM notification_outbox WHERE event_key LIKE 'support:%:service' ORDER BY target");
+  assert.equal(supportMail.length,2);
+  assert.deepEqual(supportMail.map(x=>x.target),['support-team@test.invalid','worker@test.invalid']);
+  for(const item of supportMail)assert.equal(JSON.parse(item.payload).supportTransactional,true);
+  assert.match(JSON.parse(supportMail[0].payload).body,/Please explain the task deadline/);
+  assert.match(JSON.parse(supportMail[1].payload).body,/The deadline is listed/);
+  const delivered=[];
+  await deliverNotifications(db,{email:async(row,payload)=>{delivered.push(row.target)}});
+  assert.ok(delivered.includes('worker@test.invalid'));
+  assert.ok(delivered.includes('support-team@test.invalid'));
  }finally{await pool.end();await owner.query('DROP SCHEMA '+schema+' CASCADE');await owner.end();}
 });

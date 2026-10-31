@@ -214,6 +214,8 @@ const server = http.createServer(
       ) {
         const file = {
           '/': 'index.html',
+          '/dashboard': 'index.html',
+          '/dashboard/': 'index.html',
           '/app.js': 'app.js',
           '/style.css': 'style.css',
           '/dashboard-v2.css': 'dashboard-v2.css',

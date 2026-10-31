@@ -11,7 +11,20 @@ function button(action,id,label,decision=''){return `<button data-action="${acti
 async function readImages(input){const files=[...input.files];if(files.length>6)throw Error('Choose up to 6 images');return Promise.all(files.map(file=>{if(file.size>3*1024*1024)throw Error('Each image must be under 3 MB');return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({data:r.result.split(',')[1]});r.onerror=()=>reject(Error('Unable to read image'));r.readAsDataURL(file);});}));}
 function startLive(){if(events)return;events=new EventSource('/api/events');events.onopen=()=>{$('connection').textContent='● Live updates connected';act(load);};events.addEventListener('change',()=>act(load));events.onerror=()=>{$('connection').textContent='Reconnecting live updates…';};}
 let authMode='sign-in';
-async function authenticate(form){await api(authMode==='sign-up'?'register':'login',fields(form));form.reset();await load();}
+function dashboardLocation(){
+ // The hash is an authentication UI mode, not part of the member workspace.
+ // Keep a task deep link, but discard #sign-in and signup referral data.
+ const params=new URLSearchParams(location.search);
+ const task=params.get('task');
+ return '/dashboard'+(task?'?task='+encodeURIComponent(task):'');
+}
+function enterDashboard(){
+ globalThis.history?.replaceState?.(null,'',dashboardLocation());
+}
+async function authenticate(form){
+ await api(authMode==='sign-up'?'register':'login',fields(form));
+ form.reset();enterDashboard();await load();
+}
 function showGuestPage(){
  const signup=location.hash==='#sign-up';authMode=signup?'sign-up':'sign-in';
  const showAuth=signup||location.hash==='#sign-in';
@@ -30,7 +43,7 @@ showGuestPage();
 $('login').onsubmit=e=>{e.preventDefault();act(()=>authenticate(e.target));};
 $('signup-referral').value=new URLSearchParams(location.search).get('ref')||'';
 $('register').onclick=()=>act(async()=>{const form=$('login');if(!form.reportValidity())return;await authenticate(form);});
-$('logout').onclick=()=>act(async()=>{await api('logout',{});events?.close();history.replaceState(null,'',location.pathname+location.search);location.reload();});
+$('logout').onclick=()=>act(async()=>{await api('logout',{});events?.close();globalThis.history?.replaceState?.(null,'','/');location.reload();});
 $('refresh').onclick=()=>act(load);
 $('quick-create').onsubmit=async e=>{
  e.preventDefault();const form=e.target;if(!form.reportValidity())return;
@@ -97,7 +110,8 @@ function workflowMarkup(t,admin){
 function setHTML(id,html){if($(id).innerHTML!==html)$(id).innerHTML=html;}
 function applyTaskFilter(){const filter=$('task-filter')?.value||'all';document.querySelectorAll?.('#tasks .task-listing')?.forEach(item=>{item.hidden=filter!=='all'&&item.dataset.status!==filter;});}
 $('task-filter')?.addEventListener?.('change',applyTaskFilter);
-function render(){if(!state)return;const s=state,admin=s.user.role==='admin';$('main-nav').hidden=false;$('guest-nav').hidden=true;$('landing').hidden=true;$('identity').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
+function render(){if(!state)return;const s=state,admin=s.user.role==='admin';
+ if(location.pathname!=='/dashboard'||location.hash==='#sign-in'||location.hash==='#sign-up')enterDashboard();$('main-nav').hidden=false;$('guest-nav').hidden=true;$('landing').hidden=true;$('identity').hidden=false;$('auth').hidden=true;$('workspace').hidden=false;$('logout').hidden=false;$('admin').hidden=!admin;$('withdrawBox').hidden=admin;$('identity').textContent=s.user.email;$('role').textContent=admin?'ADMIN CONSOLE':'MEMBER DASHBOARD';
  $('admin-overview').hidden=!admin;
  for(const id of ['balances'])$(id).hidden=admin;
  document.querySelector?.('.wallet-panel-title')?.toggleAttribute('hidden',admin);
