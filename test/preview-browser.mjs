@@ -64,6 +64,60 @@ try{
   await page.locator('.business-project .status').first().filter({hasText:'awaiting review'}).waitFor();
   await page.screenshot({path:new URL('business-dark-desktop.png',output).pathname,fullPage:true});
   observations.push({route:'/business',status:'synthetic draft budget and review request passed'});
+  // Experience the full nine-theme collection in real Chromium, not flat mockups.
+  await page.goto(base+'/themes',{waitUntil:'domcontentloaded'});
+  await page.locator('#theme-studio-grid .theme-card').first().waitFor({timeout:12000});
+  assert.equal(await page.locator('#theme-studio-grid .theme-card').count(),9);
+  await page.screenshot({path:new URL('theme-studio-light-desktop.png',output).pathname,fullPage:true});
+  const palettes=['light','dark','eden','sunrise','ocean','orchid','aurora','velvet','cosmos'];
+  const tones={light:'light',dark:'dark',eden:'light',sunrise:'light',ocean:'light',orchid:'light',
+    aurora:'dark',velvet:'dark',cosmos:'dark'};
+  const colors=new Map();
+  const contrast=(first,second)=>{
+    const lum=hex=>{
+      const vals=hex.slice(1).match(/../g).map(bit=>parseInt(bit,16)/255)
+        .map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4);
+      return .2126*vals[0]+.7152*vals[1]+.0722*vals[2];
+    };
+    const a=lum(first),b=lum(second);
+    return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+  };
+  for(const id of palettes){
+    await page.locator('.theme-card[data-theme="'+id+'"]').click();
+    assert.equal(await page.locator('html').getAttribute('data-theme'),id);
+    assert.equal(await page.locator('.theme-card[data-theme="'+id+'"]').getAttribute('aria-pressed'),'true');
+    const theme=await page.evaluate(()=>({
+      ink:getComputedStyle(document.documentElement).getPropertyValue('--theme-ink').trim(),
+      bg:getComputedStyle(document.documentElement).getPropertyValue('--theme-bg').trim(),
+      accent:getComputedStyle(document.documentElement).getPropertyValue('--theme-accent').trim(),
+      accentText:getComputedStyle(document.documentElement).getPropertyValue('--theme-accent-contrast').trim(),
+      scheme:getComputedStyle(document.documentElement).colorScheme
+    }));
+    assert.equal(theme.scheme,tones[id],id+' native control tone');
+    assert.ok(contrast(theme.ink,theme.bg)>=7.0,id+' body text contrast is too weak');
+    assert.ok(contrast(theme.accent,theme.accentText)>=4.5,id+' accent button contrast is too weak');
+    colors.set(id,theme.bg);
+    observations.push({route:'/themes',theme:id,contrast:contrast(theme.ink,theme.bg).toFixed(2)});
+  }
+  assert.equal(new Set(colors.values()).size,9,'all nine themes should have distinct backgrounds');
+  await page.locator('.theme-card[data-theme="cosmos"]').click();
+  await page.screenshot({path:new URL('theme-studio-cosmos-desktop.png',output).pathname,fullPage:true});
+  await page.locator('.theme-card[data-theme="sunrise"]').click();
+  await page.goto(base+'/dashboard',{waitUntil:'domcontentloaded'});
+  await page.locator('#workspace:not([hidden])').waitFor({timeout:12000});
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'sunrise','theme retained across page navigation');
+  await page.screenshot({path:new URL('dashboard-golden-hour.png',output).pathname,fullPage:true});
+  for(const route of ['/payouts','/profile','/contact','/business']){
+    await page.goto(base+route,{waitUntil:'domcontentloaded'});
+    await page.locator('#taskharbor-theme-select').waitFor();
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'sunrise',route+' should share theme');
+  }
+  await page.goto(base+'/themes',{waitUntil:'domcontentloaded'});
+  await page.locator('.theme-card[data-theme="eden"]').click();
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:new URL('theme-studio-eden-mobile.png',output).pathname,fullPage:true});
+  const themeMobile=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+  assert.ok(themeMobile.scroll<=themeMobile.width+2,'theme gallery overflow: '+JSON.stringify(themeMobile));
   await page.goto(base+'/_preview/role?as=worker',{waitUntil:'domcontentloaded'});
   await page.setViewportSize({width:390,height:844});
   await page.locator('#workspace:not([hidden])').waitFor({timeout:12000});
