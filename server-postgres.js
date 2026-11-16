@@ -1,5 +1,6 @@
 import {contactRoute,notificationTick} from './contact-notifications.js';
 import {catalogRoute,catalogState} from './task-catalog.js';
+import {qualificationsRoute,enrichQualifications} from './qualifications-postgres.js';
 import {adminFinanceSnapshot} from './admin-finances-postgres.js';
 import './config.js';
 import { hash, verify } from './auth.js';
