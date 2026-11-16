@@ -425,3 +425,19 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 - [ ] Formal assessments, user-facing applications/appeals, skills expiry/revocation, and production migration are **not complete**. The sample Business workspace is a **preview prototype only**; it does not constitute a production client portal.
 
 **Remaining critical prerequisites:** safe multi-worker slots and work-unit ledger; actual protected audio and annotation media workstations; qualified task matching and fair assessments; full client identity, funding, deliverable acceptance and revenue controls; authorized partner integration; deployment backup, real release tests and production sign-off. **Do not mark “Harbor complete” or advertise new functionality as live on the production domain.**
+
+
+### TaskHarbor Theme Studio — 2026-11-16
+
+**Interactive gallery:** `https://taskharbor-demo-preview.up.railway.app/themes`
+
+- [x] Preserved original `Light` and `Dark` identities under the descriptive names **Harbor Light** and **Midnight Grove**; kept stable persisted ids `light` and `dark` to preserve existing preferences.
+- [x] Introduced **seven additional themes**: Eden Bloom (sage and blossom), Golden Hour (sunrise/terracotta), Ocean Glass (aqua), Orchid Atelier (lilac), Aurora Circuit (deep teal/green glow), Velvet Afterglow (plum and rose gold), and Cosmic Harbor (indigo/cyan).
+- [x] Each theme owns a coherent palette of semantic background/surface/panel/text/border/accent/badge/warning/link colors, hero gradients, illustrations and appropriate light or dark native form controls. The shared application overrides are token-driven rather than applying a dark background indiscriminately.
+- [x] Updated `public/theme.js` registry and the existing site-wide Appearance selector on landing/auth, dashboard, payouts, profile and support. Theme persists under the same `taskharbor.theme` preference across pages/tabs and works without localStorage.
+- [x] Built `preview/themes.html`, `preview/themes.css` and `preview/themes.js` as an interactive comparison gallery with mini dashboard cards, color swatches, real theme switching, and responsive design. Accessible through the Railway preview toolbar and Build Status page; this gallery is not yet a separate production page.
+- [x] Fixed cascade specificity of selected palettes relative to shared theme overrides so each identity renders its own real computed colors, not just changed names.
+- [x] Updated tests: all nine theme ids, palette registry metadata, native color-scheme, accessible selector, cross-page persistence, site asset wiring; Chromium gallery interactions, sample dashboards, mobile viewport, unique backgrounds and WCAG contrast checks for main body text and primary action buttons.
+- [x] [PostgreSQL/unit CI](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43826110119) and [Chromium visual lab](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43826110118) **passed** after CSS specificity correction; screen captures are attached to the browser workflow.
+- [ ] Full WCAG audit (all states/text/surfaces), real-device testing, stakeholder design review and production AppSail rollout are separate remaining gates.
+- [ ] Styling changes do not alter any backend task claim, user balance, ledger, withdrawal, or provider integration. All additions remain on the preview development branch, not on the live TaskHarbor production domain.
