@@ -75,7 +75,8 @@ try{
   const colors=new Map();
   const contrast=(first,second)=>{
     const lum=hex=>{
-      const vals=hex.slice(1).match(/../g).map(bit=>parseInt(bit,16)/255)
+      const full=hex.length===4?'#'+[...hex.slice(1)].map(ch=>ch+ch).join(''):hex;
+      const vals=full.slice(1).match(/../g).map(bit=>parseInt(bit,16)/255)
         .map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4);
       return .2126*vals[0]+.7152*vals[1]+.0722*vals[2];
     };
