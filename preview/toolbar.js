@@ -13,6 +13,7 @@
     ['Worker','/_preview/role?as=worker'],
     ['Admin','/_preview/role?as=admin'],
     ['Business','/business'],
+    ['Themes','/themes'],
     ['Build status','/status'],
     ['Reset demo','/_preview/reset']
   ]){
