@@ -24,6 +24,7 @@ test('public preview is isolated, role-gated and synthetic end-to-end',async()=>
     assert.ok(initial.tasks.some(t=>t.category==='ai'&&t.status==='available'));
     assert.ok(initial.tasks.every(t=>t.provider==='TaskHarbor PREVIEW'));
     assert.equal((await get('/api/admin-finances',cookie)).status,403);
+    assert.equal((await post('/api/claim',{taskId:'demo-project-01'},cookie)).status,403,'Unqualified worker cannot claim the project');
     assert.equal((await get('/health')).status,200);
     assert.equal((await get('/preview/server.mjs',cookie)).status,404,'Never serve private server source');
     assert.equal((await get('/.env',cookie)).status,404);
@@ -46,6 +47,8 @@ test('public preview is isolated, role-gated and synthetic end-to-end',async()=>
     const finance=await (await get('/api/admin-finances',cookie)).json();
     assert.equal(finance.rows[0].email,'worker@example.test');
     assert.equal(finance.rows[0].requested,300);
+    const granted=await post('/api/qualification/grant',{workerEmail:'worker@example.test',skill:'software',level:'intermediate'},cookie);
+    assert.equal(granted.status,200);
     const paid=await post('/api/payout',{id:'demo-request-01',decision:'paid',reference:'PREVIEW-TEST'},cookie);
     assert.equal(paid.status,200);
     const after=await (await get('/api/state',cookie)).json();
@@ -56,6 +59,8 @@ test('public preview is isolated, role-gated and synthetic end-to-end',async()=>
     const worker=await (await get('/api/state',cookie)).json();
     assert.equal(worker.user.role,'worker');
     assert.equal(worker.wallet.withdrawn,480);
+    assert.equal(worker.tasks.find(t=>t.id==='demo-project-01').qualified,true);
+    assert.equal((await post('/api/claim',{taskId:'demo-project-01'},cookie)).status,200);
     assert.equal((await post('/api/claim',{taskId:'demo-ai-01'},cookie)).status,200);
     assert.equal((await post('/api/submit',{taskId:'demo-ai-01',content:'Synthetic AI evaluation response'},cookie)).status,200);
     const updated=await (await get('/api/state',cookie)).json();
