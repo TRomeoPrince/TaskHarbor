@@ -1,0 +1,30 @@
+.work-overlay{position:fixed;inset:0;z-index:80;display:grid;place-items:center;
+padding:16px;background:rgba(12,37,29,.62);overflow-y:auto}
+.work-dialog{width:min(100%,700px);max-height:min(92vh,1000px);overflow:auto;
+background:#fff;border-radius:20px;border:1px solid #d4e4da;box-shadow:0 24px 70px #0c251b44;
+padding:clamp(18px,3vw,30px);color:#1f3830}
+.work-dialog h2{font-size:clamp(21px,3vw,27px);margin:0 0 8px;line-height:1.25}
+.work-hint{font-size:14px;line-height:1.5;color:#526d61;margin:0 0 18px}
+.work-submission{display:grid;gap:15px}
+.work-field{display:grid;gap:7px;color:#365648;font-weight:650;font-size:13px}
+.work-field input,.work-field select,.work-field textarea{width:100%;box-sizing:border-box;border:1px solid #c4d8ca;
+background:#fff;color:#1d3b30;border-radius:10px;padding:11px 12px;min-height:42px;
+font:400 14px/1.5 inherit}
+.work-field textarea{resize:vertical;min-height:100px;line-height:1.5;font-family:inherit}
+.work-field input:focus-visible,.work-field select:focus-visible,.work-field textarea:focus-visible{outline:3px solid #7ac09a;outline-offset:2px}
+.work-actions{display:flex;flex-wrap:wrap;gap:10px}
+.work-actions button{border-radius:10px;min-height:44px;padding:10px 16px}
+.work-status{min-height:1.4em;color:#9a4919;margin:0;font-size:13px}
+.market-admin-catalog{margin:20px 0;border:1px solid #cadbcf;border-radius:14px;padding:16px;background:#f9fcfa}
+.market-admin-catalog summary{cursor:pointer;font-weight:800;color:#195d45}
+.market-admin-catalog p{color:#597364}
+#market-admin-edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+#market-admin-edit label{display:grid;gap:7px;font-size:13px;font-weight:650}
+#market-admin-edit select,#market-admin-edit input,#market-admin-edit textarea{width:100%;box-sizing:border-box}
+#market-edit-summary,#market-edit-status{grid-column:1/-1}
+#market-admin-edit button{justify-self:start;align-self:end}
+@media(max-width:650px){#market-admin-edit{grid-template-columns:1fr}
+#market-edit-summary,#market-edit-status{grid-column:auto}
+.work-overlay{align-items:start;padding:7px}
+.work-dialog{max-height:calc(100dvh - 14px);border-radius:14px}
+.work-actions button{width:100%}}
