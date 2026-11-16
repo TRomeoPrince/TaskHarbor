@@ -43,7 +43,7 @@
     if (filters.status !== 'all' && task.status !== filters.status) return false;
     if (filters.category !== 'all' && category(task) !== filters.category) return false;
     if (Number(task.reward || 0) < filters.minimumCents) return false;
-    const term = filters.search.toLocaleLowerCase();
+    const term = (filters.search || '').toLocaleLowerCase();
     if (!term) return true;
     return [task.title, task.provider, task.status, LABELS[category(task)]]
       .some(value => String(value || '').toLocaleLowerCase().includes(term));
@@ -112,14 +112,19 @@
     const detail = node.querySelector('.task-detail');
     if (detail && !detail.querySelector('.market-policy')) {
       const policy = el(doc, 'div', 'market-policy');
-      const reward = el(doc, 'span', '', 'Reward: ' + money(task.reward || 0) + ' per accepted task');
+      const units = {task:'task',item:'item',batch:'batch',clip:'clip',recorded_minute:'recorded minute',milestone:'milestone'};
+      const unit = units[task.reward_unit] || 'task';
+      const reward = el(doc, 'span', '', 'Reward: ' + money(task.reward || 0) + ' per accepted ' + unit);
       policy.append(reward);
+      if (task.expected_minutes) policy.append(el(doc, 'span', '', 'Estimated duration: ' + task.expected_minutes + ' minutes'));
+      if (task.skill_level && task.skill_level !== 'any') policy.append(el(doc, 'span', '', 'Skill level: ' + task.skill_level));
       if (task.policy && task.policy.claim_minutes) policy.append(el(doc, 'span', '', 'Work window: ' + task.policy.claim_minutes + ' minutes after activation'));
       if (task.policy && task.policy.deadline_at) {
         const deadline = new Date(Number(task.policy.deadline_at));
         if (!Number.isNaN(deadline.getTime())) policy.append(el(doc, 'span', '', 'Deadline: ' + deadline.toLocaleString()));
       }
       policy.append(el(doc, 'span', '', 'Approval and any applicable hold are required before withdrawal.'));
+      if (task.public_summary) detail.prepend(el(doc,'p','market-public-summary',task.public_summary));
       detail.prepend(policy);
     }
     return node;
@@ -150,6 +155,82 @@
       ' task' + (records.length === 1 ? '' : 's') + ' shown';
     const empty = doc.getElementById('market-empty');
     if (empty) empty.hidden = included.length !== 0;
+  }
+  function adminEditor(doc, snapshot) {
+    const form = doc.getElementById('market-admin-edit');
+    const picker = doc.getElementById('market-edit-task');
+    if (!form || !picker) return;
+    const status = doc.getElementById('market-edit-status');
+    if (status && !snapshot.catalogReady) status.textContent =
+      'Catalog database migration is required before saving classifications.';
+    const tasks = snapshot.tasks || [];
+    const previous = picker.value;
+    const previousKeys = picker.dataset.keys || '';
+    const keys = tasks.map(task => task.id).join('|');
+    const populate = () => {
+      const record = tasks.find(task => task.id === picker.value);
+      if (!record) return;
+      const field = (id, value) => {
+        const node = doc.getElementById(id);
+        if (node) node.value = value == null ? '' : String(value);
+      };
+      field('market-edit-category',record.category || 'general');
+      field('market-edit-unit',record.reward_unit || 'task');
+      field('market-edit-level',record.skill_level || 'any');
+      field('market-edit-minutes',record.expected_minutes);
+      field('market-edit-summary',record.public_summary || '');
+    };
+    if (keys !== previousKeys) {
+      picker.replaceChildren(...tasks.map(task => {
+        const option = el(doc, 'option', '', task.title + ' · ' + task.id.slice(0,8));
+        option.value = task.id;
+        return option;
+      }));
+      picker.dataset.keys = keys;
+      if (tasks.some(task => task.id === previous)) picker.value = previous;
+      populate();
+    }
+    if (form.dataset.bound) return;
+    form.dataset.bound = '1';
+    picker.addEventListener('change', () => {
+      const match = current?.snapshot?.tasks.find(task => task.id === picker.value);
+      if (!match) return;
+      const fields = [
+        ['market-edit-category',match.category||'general'],
+        ['market-edit-unit',match.reward_unit||'task'],
+        ['market-edit-level',match.skill_level||'any'],
+        ['market-edit-minutes',match.expected_minutes??''],
+        ['market-edit-summary',match.public_summary||'']
+      ];
+      fields.forEach(([id,value]) => {
+        const node = doc.getElementById(id);if(node)node.value=String(value);
+      });
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!current?.snapshot?.catalogReady) {
+        if (status) status.textContent='Catalog schema is not yet installed.';
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form));
+      const button = form.querySelector('button[type=submit]');
+      if (button) button.disabled=true;
+      if (status) status.textContent='Saving…';
+      try {
+        const response = await fetch('/api/task-catalog', {
+          method:'POST', credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+        });
+        const result=await response.json();
+        if (!response.ok) throw Error(result.error || 'Could not save task metadata');
+        if (status) status.textContent='Saved. Refreshing task listings…';
+        doc.getElementById('refresh')?.click?.();
+      } catch (error) {
+        if (status) status.textContent=error.message;
+      } finally {
+        if (button) button.disabled=false;
+      }
+    });
   }
   function mount(snapshot, options) {
     if (!snapshot || !snapshot.user || !Array.isArray(snapshot.tasks)) return;
@@ -188,7 +269,8 @@
         paintTasks(doc);
       });
     }
-    if (!admin) paintSummary(doc, snapshot);
+    if (admin) adminEditor(doc,snapshot);
+    else paintSummary(doc, snapshot);
     paintTasks(doc);
   }
   root.TaskHarborMarketplace = { mount, category, counters, matches, filterTasks, CATEGORIES };
