@@ -9,7 +9,7 @@ padding:clamp(18px,3vw,30px);color:#1f3830}
 .work-field{display:grid;gap:7px;color:#365648;font-weight:650;font-size:13px}
 .work-field input,.work-field select,.work-field textarea{width:100%;box-sizing:border-box;border:1px solid #c4d8ca;
 background:#fff;color:#1d3b30;border-radius:10px;padding:11px 12px;min-height:42px;
-font:400 14px/1.5 inherit}
+font-family:inherit;font-size:14px;line-height:1.5}
 .work-field textarea{resize:vertical;min-height:100px;line-height:1.5;font-family:inherit}
 .work-field input:focus-visible,.work-field select:focus-visible,.work-field textarea:focus-visible{outline:3px solid #7ac09a;outline-offset:2px}
 .work-actions{display:flex;flex-wrap:wrap;gap:10px}
