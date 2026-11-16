@@ -300,3 +300,34 @@ Every phase must include:
 The exact phrase **“Harbor complete 🟢”** may be used only after **all** checklist items required for the agreed product scope are verified, the corresponding features pass automated + real staging tests, critical user journeys are demonstrated on production, deployed revision/schema match tested source, finances/users are reconciled, backups/rollback are confirmed, and no critical blockers remain. Until then, always report percentage/phase only if backed by checklist evidence.
 
 **Next approval gate:** Phase 0 — protect and baseline the real Catalyst/Neon deployment, select the current release base, run safe synthetic tests and verify authenticated Dashboard navigation **without altering production data**. **Confirm next step?**
+
+
+## 13. Implementation update — 2026-11-16 (development branch, not production)
+
+**Scope decision:** User gave authorization to continue through the execution phases without individual confirmation pauses. Keep the previously documented safety, audit and production-release gates. **Do not treat this as approval to reset the live Neon database, enable paid services, create fictional provider opportunities or bypass partner legal agreements.**
+
+**Working branch:** [feature/taskharbor-marketplace-20261116](https://github.com/TRomeoPrince/TaskHarbor/tree/feature/taskharbor-marketplace-20261116) forked from `fix/dashboard-route-support-email-20261031` at `40e8e9196f9635e86dccb8a77b0ca3aafe702aa2`. No production deployment was performed.
+
+### Working code delivered in this iteration
+
+- [x] Worker marketplace progressive enhancement (`public/marketplace.js`, `public/marketplace.css`): real-data counts for available/active/review/corrections; title/provider/category search; status/category/minimum USD reward filters; reward/title sorting; empty state; mobile task navigation and responsive CSS. Does not fabricate jobs or change financial logic.
+- [x] Admin work-classification editor for already-published tasks (`public/index.html`, `public/marketplace.js`): category, payment unit, skill level, expected duration and explicitly public summary. A task remains claimable through the existing verified API. **Metadata alone does not enforce skills, quota or proof of partner funding.**
+- [x] Additive PostgreSQL metadata table and standalone admin-only API (`task-catalog-schema.sql`, `neon-schema.sql`, `task-catalog.js`). Hosted server enriches worker-visible tasks with metadata; missing-schema fallback defaults to `general` and preserves legacy behavior. Migration **not applied to production**.
+- [x] Structured worker submission dialogs for AI evaluations, transcription, image/text annotation and skilled-project milestones (`public/workspaces.js`, `public/workspaces.css`). These use validated category-specific fields, optional existing image-evidence format and the existing secure `/api/submit` review/hold flow. Drafts are retained in browser memory during the current page session; not persisted across reloads.
+- [x] Added direct asset maps to both legacy/local and hosted servers; added regression unit tests (`test/marketplace.test.js`, `test/task-catalog.test.js`, `test/workspaces.test.js`).
+- [x] Updated hosted-branch GitHub Actions test workflow to cover the feature branch and use its isolated PostgreSQL test service. [Successful workflow at workspaces test commit](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43803325106). **Latest feature commits must pass their own CI before this stage is promoted.**
+
+### Not yet complete / not safe to claim as delivered
+
+- [ ] Verify the actual live Catalyst AppSail revision/Neon schema and create a tested, private production backup and rollback.
+- [ ] Run authenticated real-browser/mobile staging acceptance tests; verify canonical routing, cross-host cookies, network resilience and responsive layout with actual rendered pages.
+- [ ] Apply `task-catalog-schema.sql` to an isolated Neon staging DB, then an approved backed-up production DB before using admin classification. Test failures/retries.
+- [ ] Extend new-task publish/import workflow so metadata is stored atomically at creation; current editor is for published task IDs.
+- [ ] Add real server-enforced eligibility, assessments and skill matching, project/work-unit capacity and multi-contributor claims, per-unit/milestone accounting and qualified refund/review paths.
+- [ ] Build category-specific media tooling: authenticated audio playback/timestamps, actual visual annotation, secure data/deliverable storage, server-side autosave, richer reviewer QA and appeals. Present structured fields are only an initial form, not complete production annotation suites.
+- [ ] Build verified business/client funding, workforce operations, real partner authorization and reconciliation, and robust payout integrations. External business/platform agreements are prerequisites.
+- [ ] Complete production security/load/privacy/accessibility testing, SLA and monitoring, staging migration, production deployment, and public verification. Never mark the live site updated from GitHub commits alone.
+
+**Deployment discipline:** Keep `main` unchanged apart from the canonical plan. Develop from the fixed hosted branch; never deploy the original SQLite `main` source onto Catalyst. Check CI, staging backups, source/schema compatibility and approved release before production deployment.
+
+**Status:** Product blueprint and initial marketplace + category-aware forms implemented **on a development branch only**. This is not “Harbor complete” and should not be described as 100% finished.
