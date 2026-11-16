@@ -26,7 +26,7 @@ const task=(id,title,status,reward,category,extras={})=>({
  created_at:Date.now(),...extras
 });
 function fresh(){
- return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,
+ return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,quotes:[],phone:'',
   tasks:[
    task('demo-ai-01','Evaluate two sample AI responses','available',150,'ai'),
    task('demo-transcript-01','Transcribe a sample recording','available',280,'transcription'),
@@ -109,8 +109,8 @@ function contacts(s){
  const admin=s.role==='admin';
  return {user:{id:admin?'preview-admin':'preview-worker',role:s.role,
    email:admin?'admin@example.test':'worker@example.test'},
-  contacts:{phone:''},prefs:{email_enabled:false,push_enabled:false},
-  threads:s.messages.map(t=>({id:t.id,subject:t.subject,status:'open',updated_at:new Date().toISOString(),
+  contacts:{phone:s.phone},prefs:{email_enabled:false,push_enabled:false},
+  threads:s.messages.map(t=>({id:t.id,subject:t.subject,status:t.status,updated_at:new Date().toISOString(),
    email:'worker@example.test'})),
   members:admin?[{email:'worker@example.test',phone:''}]:[],
   config:{emailReady:false,pushReady:false,supportEmail:'demo@example.test',supportTelegram:'',publicKey:''}};
@@ -134,7 +134,7 @@ async function handleApi(req,res,url,s){
  if(name==='/api/notifications')return response(res,{notifications:[]});
  if(name==='/api/support'){
   const thread=s.messages.find(t=>t.id===url.searchParams.get('threadId'));
-  return thread?response(res,{thread:{id:thread.id,subject:thread.subject,status:'open'},
+  return thread?response(res,{thread:{id:thread.id,subject:thread.subject,status:thread.status},
     messages:thread.messages}):error(res,404,'Sample conversation not found');
  }
  if(req.method!=='POST')return error(res,404,'Preview endpoint unavailable');
@@ -206,7 +206,64 @@ async function handleApi(req,res,url,s){
   }
   update();return response(res,{ok:true,externalId:'DEMO-'+s.createdTasks});
  }
- if(name==='/api/profile')return response(res,{ok:true,preview:true});
+ if(name==='/api/profile'){
+  if(['USD','UGX'].includes(body.currency))s.profile.preferred_currency=body.currency;
+  if(typeof body.username==='string')s.profile.username=body.username.slice(0,24);
+  return response(res,{ok:true,preview:true});
+ }
+ if(name==='/api/member-contacts'&&s.role==='worker'){
+  s.phone=String(body.phone||'').slice(0,35);
+  return response(res,{ok:true,preview:true});
+ }
+ if(name==='/api/support'&&s.role==='worker'){
+  const subject=String(body.subject||'').trim().slice(0,150);
+  const content=String(body.content||'').trim().slice(0,5000);
+  if(!subject||!content)return error(res,400,'A subject and message are required');
+  const thread={id:randomUUID(),subject,status:'open',messages:[
+   {id:randomUUID(),role:'worker',content,created_at:new Date().toISOString()}
+  ]};
+  s.messages.unshift(thread);update();
+  return response(res,{threadId:thread.id,preview:true});
+ }
+ if(name==='/api/support-message'){
+  const thread=s.messages.find(t=>t.id===body.threadId&&t.status==='open');
+  const content=String(body.content||'').trim().slice(0,5000);
+  if(!thread||!content)return error(res,400,'An open sample conversation and message are required');
+  thread.messages.push({id:randomUUID(),role:s.role,content,created_at:new Date().toISOString()});
+  update();return response(res,{ok:true,preview:true});
+ }
+ if(name==='/api/support-status'&&s.role==='admin'){
+  const thread=s.messages.find(t=>t.id===body.threadId);
+  if(!thread||!['open','closed'].includes(body.status))return error(res,400,'Invalid sample thread status');
+  thread.status=body.status;update();return response(res,{ok:true,preview:true});
+ }
+ if(name==='/api/quote'&&s.role==='worker'){
+  const currency=['USD','UGX'].includes(body.currency)?body.currency:'USD';
+  const entered=Number(body.amount);
+  if(!Number.isFinite(entered)||entered<=0)return error(res,400,'Invalid sample amount');
+  const usdCents=currency==='USD'?Math.round(entered*100):Math.round(entered*100/3700);
+  if(!Number.isSafeInteger(usdCents)||usdCents<=0||usdCents>s.wallet.available)
+   return error(res,400,'Amount exceeds sample available balance');
+  const quote={id:randomUUID(),usd_cents:usdCents,currency,
+    local_minor:currency==='USD'?usdCents:Math.round(entered),
+    rate:currency==='USD'?1000000:3700000000,
+    rate_time:Date.now(),expires:Date.now()+300000,used:false};
+  s.quotes.push(quote);
+  return response(res,quote);
+ }
+ if(name==='/api/withdraw'&&s.role==='worker'){
+  const quote=s.quotes.find(q=>q.id===body.quoteId&&!q.used&&Date.now()<q.expires);
+  const destination=String(body.destination||'').trim().slice(0,120);
+  if(!quote||!destination)return error(res,400,'Preview withdrawal quote or destination is invalid');
+  if(quote.usd_cents>s.wallet.available)return error(res,400,'Insufficient sample funds');
+  quote.used=true;s.wallet.available-=quote.usd_cents;
+  s.withdrawals.unshift({id:randomUUID(),user_id:'preview-worker',email:'worker@example.test',
+    status:'requested',amount:quote.usd_cents,destination,reference:'',
+    settlement:'USD',currency:quote.currency,local_minor:quote.local_minor,
+    rate:quote.rate,rate_time:quote.rate_time,created_at:new Date().toISOString()});
+  update();return response(res,{ok:true,preview:true});
+ }
+
  return error(res,409,'Demonstration only. No live accounts, data or payment processing.');
 }
 export const server=http.createServer(async(req,res)=>{
