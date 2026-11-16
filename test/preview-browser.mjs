@@ -1,0 +1,64 @@
+/* Real browser smoke test of the Railway preview server, using synthetic data only. */
+import assert from 'node:assert/strict';
+import {mkdirSync,writeFileSync} from 'node:fs';
+import {chromium} from 'playwright';
+import {server} from '../preview/server.mjs';
+const output=new URL('../artifacts/preview-lab/',import.meta.url);
+mkdirSync(output,{recursive:true});
+const observations=[],errors=[],failures=[];
+let browser;
+try{
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const base='http://127.0.0.1:'+server.address().port;
+  browser=await chromium.launch({headless:true});
+  const page=await browser.newPage({viewport:{width:1366,height:900}});
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(base+'/dashboard',{waitUntil:'domcontentloaded'});
+  await page.locator('#workspace:not([hidden])').waitFor({timeout:12000});
+  await page.locator('.th-preview-toolbar').waitFor();
+  assert.match(await page.locator('.th-preview-toolbar').innerText(),/PREVIEW/);
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  await page.locator('#task-demo-ai-01').waitFor();
+  assert.equal(await page.locator('#task-demo-ai-01').isVisible(),true);
+  await page.locator('#market-view-switch [data-market-view="mine"]').click();
+  assert.equal(await page.locator('#task-demo-transcript-02').isVisible(),true);
+  await page.screenshot({path:new URL('worker-light-desktop.png',output).pathname,fullPage:true});
+  await page.locator('#taskharbor-theme-select').selectOption('dark');
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.screenshot({path:new URL('worker-dark-desktop.png',output).pathname,fullPage:true});
+  observations.push({route:'/dashboard',theme:'dark',status:'worker loaded'});
+  await page.locator('a[href="/_preview/role?as=admin"]').click();
+  await page.locator('#admin-overview:not([hidden])').waitFor({timeout:12000});
+  await page.locator('#admin-finances:not([hidden])').waitFor();
+  await page.locator('#admin-finances-rows tr').first().waitFor({timeout:12000});
+  assert.match(await page.locator('#admin-finances-rows').innerText(),/worker@example.test/);
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.screenshot({path:new URL('admin-dark-desktop.png',output).pathname,fullPage:true});
+  observations.push({route:'/dashboard',role:'admin',financeRows:await page.locator('#admin-finances-rows tr').count()});
+  await page.goto(base+'/payouts',{waitUntil:'domcontentloaded'});
+  await page.locator('#payout-feed .row').first().waitFor({timeout:12000});
+  assert.match(await page.locator('#payout-feed').innerText(),/previewworker/);
+  await page.screenshot({path:new URL('payouts-dark-desktop.png',output).pathname,fullPage:true});
+  await page.goto(base+'/status',{waitUntil:'domcontentloaded'});
+  await page.locator('#status-grid .status-card').first().waitFor({timeout:12000});
+  assert.ok(await page.locator('#status-grid .status-card').count()>=8);
+  await page.screenshot({path:new URL('status-dark-desktop.png',output).pathname,fullPage:true});
+  await page.goto(base+'/_preview/role?as=worker',{waitUntil:'domcontentloaded'});
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('#workspace:not([hidden])').waitFor({timeout:12000});
+  await page.screenshot({path:new URL('worker-dark-mobile.png',output).pathname,fullPage:true});
+  const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+  assert.ok(dimensions.scroll<=dimensions.width+2,'mobile overflow: '+JSON.stringify(dimensions));
+  observations.push({route:'/dashboard',viewport:'390x844',dimensions});
+  if(errors.length)throw Error('JS errors: '+errors.join('; '));
+  console.log('PASS: temporary TaskHarbor preview in real Chromium (roles, finances, themes, payouts, tracker, mobile)');
+}catch(error){
+  failures.push(error.stack||error.message);
+  console.error('FAIL:',error);
+  process.exitCode=1;
+}finally{
+  writeFileSync(new URL('results.json',output),JSON.stringify({passed:!failures.length,observations,errors,failures},null,2));
+  await browser?.close();
+  server.closeAllConnections?.();
+  await new Promise(resolve=>server.close(resolve));
+}
