@@ -94,6 +94,23 @@ test('public preview is isolated, role-gated and synthetic end-to-end',async()=>
     assert.equal((await post('/api/member-contacts',{phone:'000-demo'},cookie)).status,200);
     assert.equal((await (await get('/api/contact',cookie)).json()).contacts.phone,'000-demo');
 
+    const projectsBefore=await (await get('/api/preview/projects',cookie)).json();
+    assert.equal(projectsBefore.projects.length,0);
+    const createdProject=await post('/api/preview/project',{
+      title:'Label synthetic photos',category:'annotation',units:'25',rewardAmount:'0.50'
+    },cookie);
+    assert.equal(createdProject.status,200);
+    const project=(await createdProject.json()).project;
+    assert.equal(project.estimatedBudgetCents,1250);
+    assert.equal(project.fundingStatus,'unfunded');
+    assert.equal(project.status,'draft');
+    const reviewedProject=await post('/api/preview/project-review',{projectId:project.id},cookie);
+    assert.equal(reviewedProject.status,200);
+    assert.equal((await (await get('/api/preview/projects',cookie)).json()).projects[0].status,'awaiting_review');
+    assert.equal((await (await get('/api/state',cookie)).json()).tasks.some(t=>t.id===project.id),false,
+      'Draft business projects must not publish tasks');
+    assert.equal((await post('/api/preview/project',{title:'',category:'ai',units:1,rewardAmount:'0.50'},cookie)).status,400);
+
     const second=await get('/api/state');
     assert.notEqual(second.headers.get('set-cookie')?.split(';')[0],cookie);
     const other=await second.json();
