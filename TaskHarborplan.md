@@ -358,3 +358,29 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 - [x] Worker sessions retain their own withdrawal histories; the new admin finance table stays hidden and its API rejects workers. The public `/payouts` feed remains completed payments only with masked destination data.
 - [x] CI on [run 43805241676](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43805241676) passed `npm test` including the new synthetic isolated-PostgreSQL reconciliation test and access checks. Source files: `admin-finances-postgres.js`, `public/admin-finances.js`, `public/admin-finances.css`, modified hosted/local static routes, `public/app.js`, `public/index.html`, `test/admin-finances.test.js`.
 - [ ] Not yet deployed to Catalyst; production AppSail SHA/database connection and backup must be verified before merging/deploying. No live financial data were changed during this implementation.
+
+
+### Appearance themes and visual lab — 2026-11-16
+
+**New directive:** TaskHarbor must support **Light** and **Dark** modes now, with room to introduce more themes later.
+
+**Implementation:** `public/theme.js` initializes the appearance in `<head>` before the main styles and scripts on `/dashboard`, `/payouts`, `/profile` and `/contact`. A labeled, keyboard-accessible Appearance selector is added to their shared headers. A stable localStorage key (`taskharbor.theme`) preserves the choice across pages, and another-tab updates are synchronized. Unknown values fall back to the existing light/nature identity; blocked browser storage does not break the UI. Future themes are added to the registry plus a matching CSS token set.
+
+**Styling:** `public/theme.css` is loaded last on all four pages, supplying a semantic token contract with dark-mode overrides for the landing/auth experience, dashboard, task marketplace, task details, mobile navigation, work dialogs, admin finance tables, payouts, profile and support conversations. The light mode remains the existing brand appearance.
+
+**Unit verification:**
+- [x] Initial preference is applied before page construction.
+- [x] Light and Dark are the only accepted selections; invalid values are rejected or normalized appropriately.
+- [x] Selection persists, synchronizes across tabs, and survives blocked localStorage.
+- [x] CSS/head/asset wiring validated on all pages and both static servers.
+- [x] PostgreSQL + project unit suite passed at [commit 9596c5b](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43812350561).
+
+**Real-browser side lab:**
+- [x] Created `test/visual-lab-server.mjs` with exclusively synthetic worker, task, payout and support fixture data. No live Neon or partner API is used.
+- [x] Created `test/theme-browser.mjs` and `.github/workflows/taskharbor-theme-visual-lab.yml`. Headless Chromium actually loads the project's current HTML/CSS/JS.
+- [x] Checked initial light appearance, dark body/header/task cards, persisted theme across Dashboard → Payouts → Profile → Support → Dashboard, and mobile viewport 390×844 without horizontal overflow.
+- [x] Visual browser run [43812350548](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43812350548) **passed**; artifact `taskharbor-light-dark-lab` contains light/dark screenshots and measured style results. These are synthetic lab screenshots, **not screenshots from production**.
+- [ ] Additional tablets, real devices, all accessibility contrast/focus states and authenticated end-to-end production acceptance must still be tested.
+- [ ] Production deployment not done, PR #9 stays draft until AppSail revision, Neon database mapping, backup and staging acceptance gates are cleared.
+
+**Scope status:** Light/Dark theme feature passes automated unit and real-browser synthetic acceptance; the overarching marketplace, role portals and revenue integrations remain incomplete. Do not mark the whole TaskHarbor product as finished on the basis of the theme tests.
