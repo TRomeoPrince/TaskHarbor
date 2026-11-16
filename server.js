@@ -150,6 +150,8 @@ const server=http.createServer(async(req,res)=>{
           '/dashboard-v2.css': 'dashboard-v2.css',
           '/marketplace.css': 'marketplace.css',
           '/marketplace.js': 'marketplace.js',
+          '/theme.js': 'theme.js',
+          '/theme.css': 'theme.css',
           '/workspaces.css': 'workspaces.css',
           '/workspaces.js': 'workspaces.js',
           '/admin-finances.js': 'admin-finances.js',
