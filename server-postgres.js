@@ -618,6 +618,12 @@ const server = http.createServer(
           return res.end(JSON.stringify(financeData));
         }
 
+        const qualificationResult = await qualificationsRoute(db,user,path,body,req.method);
+        if(qualificationResult !== null){
+          if(req.method==='POST')broadcast();
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(qualificationResult));
+        }
         const catalogResult = await catalogRoute(db,user,path,body,req.method);
         if(catalogResult !== null){
           broadcast();
