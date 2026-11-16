@@ -63,6 +63,32 @@ test('public preview is isolated, role-gated and synthetic end-to-end',async()=>
     assert.ok(updated.submissions.some(s=>s.task_id==='demo-ai-01'));
     assert.equal(updated.wallet.pending,260);
 
+    // Quote/withdraw follows the same front-end interaction but never touches real payment rails.
+    const quoteResponse=await post('/api/quote',{amount:'1.00',currency:'USD'},cookie);
+    assert.equal(quoteResponse.status,200);
+    const quote=await quoteResponse.json();
+    assert.equal(quote.usd_cents,100);
+    const demoWithdraw=await post('/api/withdraw',{quoteId:quote.id,destination:'sample-destination'},cookie);
+    assert.equal(demoWithdraw.status,200);
+    assert.equal((await (await get('/api/state',cookie)).json()).wallet.available,410);
+    assert.equal((await post('/api/withdraw',{quoteId:quote.id,destination:'duplicate'},cookie)).status,400);
+
+    const threadRequest=await post('/api/support',{subject:'Preview support question',content:'Synthetic help request'},cookie);
+    assert.equal(threadRequest.status,200);
+    const {threadId}=await threadRequest.json();
+    assert.ok(threadId);
+    const support=(await (await get('/api/support?threadId='+threadId,cookie)).json());
+    assert.equal(support.messages.length,1);
+    await get('/_preview/role?as=admin',cookie);
+    assert.equal((await post('/api/support-message',{threadId,content:'Synthetic administrator answer'},cookie)).status,200);
+    assert.equal((await post('/api/support-status',{threadId,status:'closed'},cookie)).status,200);
+    await get('/_preview/role?as=worker',cookie);
+    const answered=(await (await get('/api/support?threadId='+threadId,cookie)).json());
+    assert.equal(answered.messages.length,2);
+    assert.equal(answered.thread.status,'closed');
+    assert.equal((await post('/api/member-contacts',{phone:'000-demo'},cookie)).status,200);
+    assert.equal((await (await get('/api/contact',cookie)).json()).contacts.phone,'000-demo');
+
     const second=await get('/api/state');
     assert.notEqual(second.headers.get('set-cookie')?.split(';')[0],cookie);
     const other=await second.json();
