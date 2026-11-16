@@ -384,3 +384,17 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 - [ ] Production deployment not done, PR #9 stays draft until AppSail revision, Neon database mapping, backup and staging acceptance gates are cleared.
 
 **Scope status:** Light/Dark theme feature passes automated unit and real-browser synthetic acceptance; the overarching marketplace, role portals and revenue integrations remain incomplete. Do not mark the whole TaskHarbor product as finished on the basis of the theme tests.
+
+
+### Separate worker Find Work and My Tasks — 2026-11-16
+
+**User-vision acceptance:** A marketplace must not mix public open offers with the individual worker's active assignments.
+
+- [x] Dashboard `#market-view-switch` now exposes two accessible worker controls, **Find Work** and **My Tasks**, with current `aria-pressed` state and theme-aware styling.
+- [x] `public/marketplace.js` scopes **Find Work** to `status='available'` and **My Tasks** to tasks with `worker_id=currentUser.id` and nonavailable state; other workers' assignments never appear. Existing server authorization and data-filtering remain the final permission boundary. Admin `Task registry` still shows the entire authorized registry without worker filtering.
+- [x] Search, category/reward/status filters and sort act inside the selected view; switching clears the status filter to avoid an empty/contradictory state. Mobile navigation and worker overview cards navigate to the right view.
+- [x] Unit test `test/marketplace.test.js` checks discovery, assigned ownership, admin registry and accessible buttons. Browser lab `test/theme-browser.mjs` clicks both views in real Chromium against synthetic tasks and verifies correct visibility.
+- [x] [Full PostgreSQL/unit CI run 43812830809](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43812830809) passed. [Chromium UI run 43812830800](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43812830800) passed, including Light/Dark persistence and mobile overflow checks.
+- [ ] Public website still unchanged; do not deploy before production SHA/database mapping, backups and staging end-to-end permissions tests. Qualification matching, multiple worker slots, specialist media tools, company/client accounts, partner integration and payments remain separate unfinished phases.
+
+**Current delivery status:** Theme and worker-scope UI accepted by synthetic tests. The full TaskHarbor platform remains **in development**; do not label it 100% complete.
