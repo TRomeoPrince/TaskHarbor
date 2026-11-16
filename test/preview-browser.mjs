@@ -20,6 +20,7 @@ try{
   assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
   await page.locator('#task-demo-ai-01').waitFor();
   assert.equal(await page.locator('#task-demo-ai-01').isVisible(),true);
+  assert.equal(await page.locator('#task-demo-project-01 [data-action="claim"]').isDisabled(),true,'unqualified work is locked');
   await page.locator('#market-view-switch [data-market-view="mine"]').click();
   assert.equal(await page.locator('#task-demo-transcript-02').isVisible(),true);
   await page.screenshot({path:new URL('worker-light-desktop.png',output).pathname,fullPage:true});
@@ -32,6 +33,12 @@ try{
   await page.locator('#admin-finances:not([hidden])').waitFor();
   await page.locator('#admin-finances-rows tr').first().waitFor({timeout:12000});
   assert.match(await page.locator('#admin-finances-rows').innerText(),/worker@example.test/);
+  await page.locator('#admin-qualification-tools summary').click();
+  await page.locator('#qualification-grant-form [name="workerEmail"]').fill('worker@example.test');
+  await page.locator('#qualification-grant-form [name="skill"]').selectOption('software');
+  await page.locator('#qualification-grant-form [name="level"]').selectOption('intermediate');
+  await page.locator('#qualification-grant-form button[type="submit"]').click();
+  await page.locator('#qualification-admin-status').filter({hasText:'updated'}).waitFor({timeout:12000});
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   await page.screenshot({path:new URL('admin-dark-desktop.png',output).pathname,fullPage:true});
   observations.push({route:'/dashboard',role:'admin',financeRows:await page.locator('#admin-finances-rows tr').count()});
@@ -46,6 +53,8 @@ try{
   await page.goto(base+'/_preview/role?as=worker',{waitUntil:'domcontentloaded'});
   await page.setViewportSize({width:390,height:844});
   await page.locator('#workspace:not([hidden])').waitFor({timeout:12000});
+  await page.locator('#market-view-switch [data-market-view="discover"]').click();
+  assert.equal(await page.locator('#task-demo-project-01 [data-action="claim"]').isDisabled(),false,'grant unlocks claim');
   await page.screenshot({path:new URL('worker-dark-mobile.png',output).pathname,fullPage:true});
   const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
   assert.ok(dimensions.scroll<=dimensions.width+2,'mobile overflow: '+JSON.stringify(dimensions));
