@@ -325,6 +325,10 @@ export const server=http.createServer(async(req,res)=>{
  if(route==='/health')return response(res,{ok:true,preview:true});
  if(route==='/robots.txt'){res.writeHead(200,{'Content-Type':'text/plain'});return res.end('User-agent: *\nDisallow: /\n')}
  if(route==='/api/preview/status')return response(res,previewStatus());
+ if(route==='/themes'){
+  res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});
+  return res.end(readFileSync(path.join(PREVIEW,'themes.html')));
+ }
  if(route==='/business'){
   res.writeHead(200,{'Content-Type':'text/html'});
   return res.end(readFileSync(path.join(PREVIEW,'business.html')));
