@@ -105,7 +105,7 @@ test('theme assets load before layout paint and dark rules apply to all main pag
   for(const backend of ['server.js','server-postgres.js']){
     const source=readFileSync(new URL('../'+backend,import.meta.url),'utf8');
     for(const name of ['theme.js','theme.css']) {
-      assert.match(source,new RegExp("'\\\\/"+name.replace('.','\\\\.')+"'\\\\s*:\\\\s*'"+name.replace('.','\\\\.')+"'"));
+      assert.ok(source.includes("'/"+name+"': '"+name+"'"), backend+' must serve '+name);
     }
   }
 });
