@@ -22,6 +22,17 @@ try {
   await page.goto(base+'/dashboard',{waitUntil:'domcontentloaded'});
   await page.locator('#workspace:not([hidden])').waitFor({timeout:10000});
   await page.locator('#taskharbor-theme-select').waitFor();
+  // The same browser lab tests functional work discovery, not just CSS colors.
+  await page.locator('#market-view-switch [data-market-view="discover"]').waitFor();
+  assert.equal(await page.locator('#task-work-example-1').isVisible(),true,'discovery shows available work');
+  assert.equal(await page.locator('#task-work-example-2').isVisible(),false,'discovery hides assigned tasks');
+  await page.locator('#market-view-switch [data-market-view="mine"]').click();
+  assert.equal(await page.locator('#task-work-example-1').isVisible(),false,'My Tasks hides available work');
+  assert.equal(await page.locator('#task-work-example-2').isVisible(),true,'My Tasks shows claimed work');
+  assert.equal(await page.locator('#task-work-example-3').isVisible(),true,'My Tasks shows submitted work');
+  assert.equal(await page.locator('#market-view-switch [data-market-view="mine"]').getAttribute('aria-pressed'),'true');
+  await page.locator('#market-view-switch [data-market-view="discover"]').click();
+  observations.push({page:'dashboard',workViews:'discover and mine scoped correctly'});
   assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
   const light=await css('body');
   assert.equal(light.background,'rgb(246, 248, 245)');
