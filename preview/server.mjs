@@ -336,7 +336,7 @@ export const server=http.createServer(async(req,res)=>{
  if(route==='/status'||route==='/_preview/status'){
   res.writeHead(200,{'Content-Type':'text/html'});return res.end(readFileSync(path.join(PREVIEW,'status.html')));
  }
- if(['/_preview/toolbar.js','/_preview/toolbar.css','/_preview/status.js','/_preview/status.css','/_preview/business.js','/_preview/business.css'].includes(route)){
+ if(['/_preview/toolbar.js','/_preview/toolbar.css','/_preview/status.js','/_preview/status.css','/_preview/business.js','/_preview/business.css','/_preview/themes.js','/_preview/themes.css'].includes(route)){
   const file=path.join(PREVIEW,path.basename(route));
   res.writeHead(200,{'Content-Type':MIME[path.extname(file)]});
   return res.end(readFileSync(file));
