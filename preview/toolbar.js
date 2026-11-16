@@ -12,6 +12,7 @@
   for(const [title,url] of [
     ['Worker','/_preview/role?as=worker'],
     ['Admin','/_preview/role?as=admin'],
+    ['Business','/business'],
     ['Build status','/status'],
     ['Reset demo','/_preview/reset']
   ]){
