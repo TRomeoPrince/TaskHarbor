@@ -16,6 +16,11 @@
   ],
   "milestones": [
     {
+      "name": "Public temporary preview website",
+      "status": "verified",
+      "detail": "Railway preview service; real browser worker/admin/finance/theme/business tests; per-session synthetic data; automatic source-branch redeploys"
+    },
+    {
       "name": "Light & dark themes",
       "status": "verified",
       "detail": "Desktop/mobile rendered checks, preference persistence, pages and controls"
@@ -42,8 +47,8 @@
     },
     {
       "name": "Worker qualifications",
-      "status": "not-started",
-      "detail": "Skills metadata exists; server-side eligibility tests remain"
+      "status": "partial",
+      "detail": "PostgreSQL verified skill grants, task requirements, transaction-safe claim checks, browser lock/unlock demo; assessments remain"
     },
     {
       "name": "Transcription player & annotation canvas",
@@ -52,8 +57,8 @@
     },
     {
       "name": "Client/business portal",
-      "status": "not-started",
-      "detail": "Projects, funding verification, deliverable acceptance and permissions"
+      "status": "partial",
+      "detail": "Interactive synthetic project creation, unit pricing, estimated budget and review request; real client identity, funding, allocation and billing remain"
     },
     {
       "name": "Authorized external partners",
@@ -69,6 +74,10 @@
   "notes": [
     "The preview intentionally uses synthetic worker accounts, sample tasks and sample balances only.",
     "Actions here cannot trigger a real withdrawal, worker payout, third-party integration or database write.",
-    "GitHub pushes to the preview source branch trigger preview redeployments when Railway deployment is connected."
-  ]
+    "GitHub pushes to the preview source branch trigger preview redeployments when Railway deployment is connected.",
+    "Preview includes a sample Business workspace showing project economics but never collects real payments or publishes work units."
+  ],
+  "previewUrl": "https://taskharbor-demo-preview.up.railway.app/dashboard",
+  "businessPreviewUrl": "https://taskharbor-demo-preview.up.railway.app/business",
+  "trackerUrl": "https://taskharbor-demo-preview.up.railway.app/status"
 }
