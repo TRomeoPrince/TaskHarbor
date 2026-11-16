@@ -331,3 +331,16 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 **Deployment discipline:** Keep `main` unchanged apart from the canonical plan. Develop from the fixed hosted branch; never deploy the original SQLite `main` source onto Catalyst. Check CI, staging backups, source/schema compatibility and approved release before production deployment.
 
 **Status:** Product blueprint and initial marketplace + category-aware forms implemented **on a development branch only**. This is not “Harbor complete” and should not be described as 100% finished.
+
+
+### Isolated Neon verification — 2026-11-16
+
+- [x] Connected Neon project identified by non-secret id `wandering-dream-19531701`, project name TaskHarbor. Active branch `taskharbor-live-final` (`br-solitary-shadow-baezeass`), with legacy task workflow and contact tables. **Caveat:** AppSail's actual private `DATABASE_URL` has not been independently inspected, so do not claim absolute proof that this is its current target.
+- [x] Read-only source counts: 24 users, 13 tasks, 4 submissions, 4 ledger entries, 1 withdrawal. No credentials or personal details were exported.
+- [x] Created isolated copy-on-write staging branch `taskharbor-marketplace-validation-20261116` (`br-young-block-baip5s3u`) from `taskharbor-live-final`. This is not the default branch.
+- [x] Applied exactly two additive SQL statements from versioned `task-catalog-schema.sql` (CREATE TABLE and CREATE INDEX) in one staging transaction. New `task_catalog` table exists and initially has 0 metadata rows.
+- [x] Verified staging still has 24 users, 13 tasks, 4 ledger entries and 1 withdrawal. Rechecked parent: `task_catalog` is **not** installed there; source remains untouched.
+- [x] Staging compute limited to 0.25 CU and explicitly sent to Neon suspend endpoint to avoid prolonged active compute charges. This is only an isolated test database copy, **not** a verified independently restorable production backup.
+- [ ] Still required: check actual AppSail source SHA + secret environment's database target; run authenticated staging app/browser with matching latest code; verify migration/rollback and complete production backup; get approval for live schema migration and deployment.
+
+**Source / staging separation:** The production branch was queried read-only. No live table was created, no historical credit or user balance was touched, and no public domain was switched.
