@@ -34,7 +34,7 @@
  for(const theme of api.available()){
   const colors=palettes[theme.id];
   if(!colors)continue;
-  const card=node('button','theme-card');
+  const card=node('button','theme-card theme-button');
   card.type='button';card.dataset.theme=theme.id;
   card.setAttribute('aria-label','Use '+theme.label+' theme');
   const preview=node('div','theme-card-mini');
