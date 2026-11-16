@@ -23,7 +23,7 @@
     {
       "name": "Nine creative themes",
       "status": "verified",
-      "detail": "Desktop/mobile rendered checks, preference persistence, pages and controls"
+      "detail": "Nine creative palettes and interactive Theme Studio; persisted selection, cross-page appearance, desktop/mobile Chromium screenshots, body/button contrast checks; original Light and Dark preserved"
     },
     {
       "name": "Find Work vs My Tasks",
@@ -75,9 +75,11 @@
     "The preview intentionally uses synthetic worker accounts, sample tasks and sample balances only.",
     "Actions here cannot trigger a real withdrawal, worker payout, third-party integration or database write.",
     "GitHub pushes to the preview source branch trigger preview redeployments when Railway deployment is connected.",
-    "Preview includes a sample Business workspace showing project economics but never collects real payments or publishes work units."
+    "Preview includes a sample Business workspace showing project economics but never collects real payments or publishes work units.",
+    "Theme Studio is accessible from the top preview toolbar at /themes; custom palettes affect appearance only and do not change task or payout logic."
   ],
   "previewUrl": "https://taskharbor-demo-preview.up.railway.app/dashboard",
   "businessPreviewUrl": "https://taskharbor-demo-preview.up.railway.app/business",
-  "trackerUrl": "https://taskharbor-demo-preview.up.railway.app/status"
+  "trackerUrl": "https://taskharbor-demo-preview.up.railway.app/status",
+  "themeStudioUrl": "https://taskharbor-demo-preview.up.railway.app/themes"
 }
