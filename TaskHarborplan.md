@@ -344,3 +344,17 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 - [ ] Still required: check actual AppSail source SHA + secret environment's database target; run authenticated staging app/browser with matching latest code; verify migration/rollback and complete production backup; get approval for live schema migration and deployment.
 
 **Source / staging separation:** The production branch was queried read-only. No live table was created, no historical credit or user balance was touched, and no public domain was switched.
+
+
+### Administrator payouts and per-user balance visibility — 2026-11-16
+
+**User request:** Clearly expose requested (not yet paid) withdrawals and show each individual worker's finances in the administrator dashboard without exposing private balances in the public payout feed.
+
+**Implementation on `feature/taskharbor-marketplace-20261116`:**
+- [x] New **Member balances** admin-only panel with search by email/username, 100-worker pagination, manual refresh and live-change-aware periodic freshness; sections show available, pending review, held, lifetime earned, paid withdrawals and requested withdrawals in USD.
+- [x] New authenticated read-only `GET /api/admin-finances` endpoint implemented in `admin-finances-postgres.js`, with role gate before any private queries and SQL grouped separately by ledger/tasks/moderation/withdrawals to prevent multiplying balances.
+- [x] Requests are shown **separately** from available funds; requested amounts are already debited/reserved. Pending and held rewards are not available for withdrawal; no money or task state changes occur through this panel.
+- [x] Admin **Withdrawals & payouts** section now defaults to **Requested (unpaid)** and offers All/Paid/Rejected filters; requests appear first, with existing admin record-payment and reject/refund actions preserved.
+- [x] Worker sessions retain their own withdrawal histories; the new admin finance table stays hidden and its API rejects workers. The public `/payouts` feed remains completed payments only with masked destination data.
+- [x] CI on [run 43805241676](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43805241676) passed `npm test` including the new synthetic isolated-PostgreSQL reconciliation test and access checks. Source files: `admin-finances-postgres.js`, `public/admin-finances.js`, `public/admin-finances.css`, modified hosted/local static routes, `public/app.js`, `public/index.html`, `test/admin-finances.test.js`.
+- [ ] Not yet deployed to Catalyst; production AppSail SHA/database connection and backup must be verified before merging/deploying. No live financial data were changed during this implementation.
