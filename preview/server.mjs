@@ -133,7 +133,7 @@ async function handleApi(req,res,url,s){
   destination:'07xxxxxx882',created_at:'2026-11-16T06:00:00Z'}]);
  if(name==='/api/contact')return response(res,contacts(s));
  if(name==='/api/notifications')return response(res,{notifications:[]});
- if(name==='/api/support'){
+ if(name==='/api/support'&&req.method==='GET'){
   const thread=s.messages.find(t=>t.id===url.searchParams.get('threadId'));
   return thread?response(res,{thread:{id:thread.id,subject:thread.subject,status:thread.status},
     messages:thread.messages}):error(res,404,'Sample conversation not found');
