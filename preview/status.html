@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>TaskHarbor preview — Build status</title>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/dashboard-v2.css">
+<link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/_preview/toolbar.css">
+<style>
+.status-page{max-width:1050px;margin:0 auto;padding:35px 22px 90px}
+.status-page h1{font-size:clamp(28px,4vw,44px);margin:12px 0}
+.status-page .intro{max-width:780px;line-height:1.7;color:var(--theme-text-soft)}
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:13px;margin-top:24px}
+.status-card{padding:21px;border-radius:16px;border:1px solid var(--theme-border);background:var(--theme-surface)}
+.status-card h2{font-size:17px;margin:0 0 9px}
+.status-card p{font-size:13px;line-height:1.55;color:var(--theme-text-soft)}
+.status-card .phase-status{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;
+ background:var(--theme-badge-bg);color:var(--theme-accent);font-weight:800;text-transform:uppercase}
+.status-card .phase-status[data-status="blocked"],.status-card .phase-status[data-status="not-started"]{
+ background:var(--theme-warning-bg);color:var(--theme-warning-ink)}
+.status-meta{padding:16px 20px;background:var(--theme-panel);border-radius:13px;margin-top:25px;
+ border:1px solid var(--theme-border)}
+.status-meta p{margin:5px 0;font-size:13px;line-height:1.6}
+.status-links{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px}
+.status-links a{padding:11px 15px;border-radius:9px;background:var(--theme-accent);
+ color:var(--theme-accent-contrast)!important;text-decoration:none;font-size:13px;font-weight:750}
+.status-links a:focus-visible{outline:3px solid var(--theme-accent);outline-offset:2px}
+</style>
+<script src="/_preview/toolbar.js" defer></script>
+<script src="/_preview/status.js" defer></script>
+</head><body>
+<header class="site-header"><a class="brand" href="/dashboard">TaskHarbor<span class="brand-dot">.</span></a>
+<nav><a href="/dashboard">Preview dashboard</a><a href="/status" aria-current="page">Build status</a></nav></header>
+<main class="status-page"><p class="eyebrow">DEVELOPMENT CONTROL CENTER</p>
+<h1>TaskHarbor build status</h1>
+<p class="intro">Track verified improvements and unfinished work as the preview branch evolves. These records distinguish tested code from production-ready functions. This environment contains no real user data.</p>
+<div class="status-meta"><p id="preview-sha">Deployed commit: loading…</p><p id="preview-data">Test environment only</p></div>
+<div class="status-links"><a href="/dashboard">Try the worker dashboard</a>
+<a href="/_preview/role?as=admin">Try the admin dashboard</a>
+<a href="https://github.com/TRomeoPrince/TaskHarbor/pull/9" target="_blank" rel="noopener noreferrer">Development PR #9</a></div>
+<div id="status-grid" class="status-grid" aria-live="polite"><p>Loading verified milestones…</p></div>
+<section><h2>Verification and source</h2>
+<p>Milestone status is updated alongside code and tests, not automatically inferred from planned features.</p>
+<div id="test-links" class="status-links"></div></section>
+</main></body></html>
