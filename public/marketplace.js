@@ -23,6 +23,7 @@
   const STATUSES = new Set(['available', 'claimed', 'submitted', 'approved', 'rejected']);
   let current = null;
   let initialized = false;
+  let activeView = 'discover';
   function category(task) {
     const raw = String(task.task_type || task.category || task.work_type || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     const key = ALIASES[raw] || raw;
@@ -51,6 +52,12 @@
   function filterTasks(tasks, filters) {
     return tasks.filter(task => matches(task, filters));
   }
+  function scopeTasks(tasks, user, view = 'discover') {
+    if (user?.role === 'admin') return tasks;
+    if (view === 'mine') return tasks.filter(task => task.worker_id === user?.id &&
+      task.status !== 'available');
+    return tasks.filter(task => task.status === 'available');
+  }
   function filtersFromUi(doc) {
     const get = id => doc.getElementById(id);
     const status = get('task-filter')?.value || 'all';
@@ -69,9 +76,10 @@
     if (text !== undefined) node.textContent = String(text);
     return node;
   }
-  function oneCard(doc, label, value, detail, href) {
+  function oneCard(doc, label, value, detail, href, view = 'discover') {
     const item = el(doc, 'a', 'market-stat');
     item.href = href;
+    item.dataset.marketViewLink = view;
     item.append(el(doc, 'span', 'market-stat-label', label));
     item.append(el(doc, 'strong', 'market-stat-value', value));
     item.append(el(doc, 'small', 'market-stat-detail', detail));
@@ -83,9 +91,9 @@
     const totals = counters(snapshot.tasks || [], snapshot.submissions || [], snapshot.user.id);
     node.replaceChildren(
       oneCard(doc, 'Find work', totals.available, 'Open tasks', '#tasks-section'),
-      oneCard(doc, 'My active work', totals.active, 'Continue tasks', '#tasks-section'),
-      oneCard(doc, 'In review', totals.inReview, 'Awaiting a decision', '#submissions-section'),
-      oneCard(doc, 'Needs attention', totals.corrections, 'Review corrections', '#tasks-section')
+      oneCard(doc, 'My active work', totals.active, 'Continue tasks', '#tasks-section', 'mine'),
+      oneCard(doc, 'In review', totals.inReview, 'Awaiting a decision', '#tasks-section', 'mine'),
+      oneCard(doc, 'Needs attention', totals.corrections, 'Review corrections', '#tasks-section', 'mine')
     );
     const label = doc.getElementById('marketplace-welcome');
     if (label) label.textContent = 'Welcome back. You have ' + totals.active +
@@ -133,7 +141,8 @@
     if (!current) return;
     const { snapshot, money } = current;
     const filters = filtersFromUi(doc);
-    const records = snapshot.tasks || [];
+    const allRecords = snapshot.tasks || [];
+    const records = scopeTasks(allRecords, snapshot.user, activeView);
     const included = filterTasks(records, filters);
     const eligibleIds = new Set(included.map(t => String(t.id)));
     const sort = filters.sort;
@@ -144,7 +153,7 @@
       return 0;
     });
     const positions = new Map(ranked.map((t, i) => [String(t.id), i]));
-    records.forEach(t => {
+    allRecords.forEach(t => {
       const card = enhanceCard(doc, t, money);
       if (!card) return;
       card.hidden = !eligibleIds.has(String(t.id));
@@ -154,7 +163,21 @@
     if (result) result.textContent = included.length + ' of ' + records.length +
       ' task' + (records.length === 1 ? '' : 's') + ' shown';
     const empty = doc.getElementById('market-empty');
-    if (empty) empty.hidden = included.length !== 0;
+    if (empty) {
+      empty.hidden = included.length !== 0;
+      empty.textContent = activeView === 'mine'
+        ? 'No matching assignments. Your claimed and submitted tasks appear here.'
+        : 'No matching open work. Try another category or clear your filters.';
+    }
+    const switcher = doc.getElementById('market-view-switch');
+    if (switcher) switcher.hidden = snapshot.user.role === 'admin';
+    doc.querySelectorAll?.('#market-view-switch [data-market-view]')?.forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.marketView === activeView));
+    });
+    if (snapshot.user.role !== 'admin') {
+      const heading = doc.querySelector?.('#tasks-section .section-heading h2');
+      if (heading) heading.textContent = activeView === 'mine' ? 'My Tasks' : 'Find Work';
+    }
   }
   function adminEditor(doc, snapshot) {
     const form = doc.getElementById('market-admin-edit');
@@ -254,6 +277,22 @@
             target.addEventListener('change', () => paintTasks(doc));
           }
         });
+      const selectView = view => {
+        if (view !== 'discover' && view !== 'mine') return;
+        activeView=view;
+        const status=doc.getElementById('task-filter');
+        if (status) status.value='all';
+        paintTasks(doc);
+      };
+      doc.querySelectorAll?.('#market-view-switch [data-market-view]')?.forEach(button => {
+        button.addEventListener('click', () => selectView(button.dataset.marketView));
+      });
+      doc.addEventListener?.('click', event => {
+        const link=event.target?.closest?.('[data-market-view-link]');
+        if (link && current?.snapshot?.user?.role !== 'admin') {
+          selectView(link.dataset.marketViewLink);
+        }
+      });
       const clear = doc.getElementById('market-clear');
       if (clear) clear.addEventListener('click', () => {
         ['market-search', 'market-minimum'].forEach(id => {
@@ -273,5 +312,5 @@
     else paintSummary(doc, snapshot);
     paintTasks(doc);
   }
-  root.TaskHarborMarketplace = { mount, category, counters, matches, filterTasks, CATEGORIES };
+  root.TaskHarborMarketplace = { mount, category, counters, matches, filterTasks, scopeTasks, CATEGORIES };
 })(globalThis);
