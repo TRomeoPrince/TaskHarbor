@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { transaction } from './postgres.js';
+import { requireQualification } from './qualifications-postgres.js';
 
 const number = value => Number(value || 0);
 
