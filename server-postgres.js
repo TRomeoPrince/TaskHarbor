@@ -908,7 +908,7 @@ const server = http.createServer(
       if (
         path === '/api/state'
       ) {
-        result = await catalogState(db, await enrich(db,user,result));
+        result = await enrichQualifications(db,user, await catalogState(db, await enrich(db,user,result)));
       }
 
       if (
