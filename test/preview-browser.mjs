@@ -100,7 +100,7 @@ try{
     colors.set(id,theme.bg);
     observations.push({route:'/themes',theme:id,contrast:contrast(theme.ink,theme.bg).toFixed(2)});
   }
-  assert.equal(new Set(colors.values()).size,9,'all nine themes should have distinct backgrounds');
+  assert.equal(new Set(colors.values()).size,9,'all nine themes should have distinct backgrounds: '+JSON.stringify(Object.fromEntries(colors)));
   await page.locator('.theme-card[data-theme="cosmos"]').click();
   await page.screenshot({path:new URL('theme-studio-cosmos-desktop.png',output).pathname,fullPage:true});
   await page.locator('.theme-card[data-theme="sunrise"]').click();
