@@ -147,7 +147,7 @@
     overlay.append(dialog);
     const previousFocus=doc.activeElement;
     const saveDraft=()=>drafts.set(task.id,Object.fromEntries(new FormData(form)));
-    const close=()=>{saveDraft();overlay.remove();previousFocus?.focus?.();};
+    const close=()=>{saveDraft();overlay.remove();doc.removeEventListener('keydown',escape);previousFocus?.focus?.();};
     cancel.addEventListener('click',close);
     form.addEventListener('input',saveDraft);
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
