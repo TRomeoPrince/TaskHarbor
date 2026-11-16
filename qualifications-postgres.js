@@ -65,6 +65,9 @@ export async function qualificationsRoute(db,user,path,body,method){
 }
 /** Check inside the SERIALIZABLE transaction before UPDATE tasks ... claimed. */
 export async function requireQualification(tx,taskId,userId){
+ // A failed SELECT aborts a PostgreSQL transaction. A SAVEPOINT lets old
+ // unmigrated installations continue claiming legacy work without a rollback.
+ await tx.query('SAVEPOINT taskharbor_qualification_check');
  try{
   const result=await tx.query(
    'SELECT r.skill,r.min_level FROM task_requirements r '+
@@ -75,9 +78,13 @@ export async function requireQualification(tx,taskId,userId){
   const denied=result.rows[0];
   if(denied)reject('Verified qualification required: '+denied.skill+
    ' (level '+denied.min_level+')',403);
+  await tx.query('RELEASE SAVEPOINT taskharbor_qualification_check');
  }catch(error){
-  // Old tasks must remain claimable until an explicit additive migration.
-  if(missingSchema(error))return;
+  if(missingSchema(error)){
+   await tx.query('ROLLBACK TO SAVEPOINT taskharbor_qualification_check');
+   await tx.query('RELEASE SAVEPOINT taskharbor_qualification_check');
+   return;
+  }
   throw error;
  }
 }
