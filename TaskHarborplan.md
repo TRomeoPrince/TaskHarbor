@@ -398,3 +398,30 @@ The exact phrase **“Harbor complete 🟢”** may be used only after **all** c
 - [ ] Public website still unchanged; do not deploy before production SHA/database mapping, backups and staging end-to-end permissions tests. Qualification matching, multiple worker slots, specialist media tools, company/client accounts, partner integration and payments remain separate unfinished phases.
 
 **Current delivery status:** Theme and worker-scope UI accepted by synthetic tests. The full TaskHarbor platform remains **in development**; do not label it 100% complete.
+
+
+### Public preview site, qualifications and synthetic business portal — 2026-11-16
+
+**Live preview URL:** `https://taskharbor-demo-preview.up.railway.app/dashboard`  
+**Feature progress tracker:** `https://taskharbor-demo-preview.up.railway.app/status`  
+**Business portal prototype:** `https://taskharbor-demo-preview.up.railway.app/business`
+
+**Deployment:** Created a separate Railway project **TaskHarbor Preview Lab** with a `preview` environment and service `taskharbor-demo`. The service tracks GitHub branch `feature/taskharbor-marketplace-20261116`; start command `node preview/server.mjs`, health endpoint `/health`, small resource limits and application sleeping enabled. The generated `*.up.railway.app` domain is Railway-managed; no custom TaskHarbor production domain or Catalyst deployment was altered. Railway reported a SUCCESS deployment and an online service.
+
+**Safety:** The preview uses the actual evolving `public/` UI but provides **only synthetic, per-browser-session data** with no Neon credentials/imports, real worker records, external provider endpoints, or payout rails. Preview actions can alter demonstration tasks/reviews/withdrawals only in memory. A fixed navigation bar and robots noindex notice distinguish the preview from production. Users can switch Worker ↔ Admin, reset their sample session, open the Business sandbox and view the progress tracker. Auto-redeploy follows the feature branch; each running revision is visible via the status endpoint when the hosting environment supplies its commit SHA.
+
+**Acceptance coverage:**
+- [x] Browser test `test/preview-browser.mjs` uses real Chromium to validate Worker/Admin dashboard, financial table, Light/Dark persistence, payout feed, progress tracker, mobile viewport, simulated qualification lock/grant, and Business project draft→review.
+- [x] API test `test/preview.test.js` checks synthetic session isolation, role-based admin finances, per-user fake payouts, worker claims/submissions, quotes and withdrawal reservations, support conversations, qualification gate, and unfunded project accounting.
+- [x] GitHub Actions `taskharbor-theme-visual-lab.yml` uploads screenshots for inspected pages and runs the preview browser test in addition to theme testing.
+- [x] [Project/API test run](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43817867891) and [real browser run](https://github.com/TRomeoPrince/TaskHarbor/actions/runs/43817867729) passed at the last business preview feature commit.
+- [ ] Neither GitHub unit tests nor synthetic UI prove production-ready security/operations; actual AppSail/Neon release controls and live authentication acceptance are still required.
+
+**New authenticated production-code qualification work (development branch only):**
+- [x] Additive `worker_qualifications` and `task_requirements` tables via `qualifications-schema.sql` and fresh `neon-schema.sql`; no change to existing tasks/ledger.
+- [x] Admin-only verified worker-skill grant and per-task minimum-level API; worker qualification listing; task cards include eligibility and lock action when verification is missing.
+- [x] Qualification checks execute inside the SERIALIZABLE PostgreSQL claim transaction. Legacy DBs lacking tables use a SAVEPOINT rollback for compatibility without leaving a transaction aborted.
+- [x] Isolated PostgreSQL regression tests for admin authorization, rejected unqualified claims, verified grants, worker-specific eligibility and legacy-schema compatibility.
+- [ ] Formal assessments, user-facing applications/appeals, skills expiry/revocation, and production migration are **not complete**. The sample Business workspace is a **preview prototype only**; it does not constitute a production client portal.
+
+**Remaining critical prerequisites:** safe multi-worker slots and work-unit ledger; actual protected audio and annotation media workstations; qualified task matching and fair assessments; full client identity, funding, deliverable acceptance and revenue controls; authorized partner integration; deployment backup, real release tests and production sign-off. **Do not mark “Harbor complete” or advertise new functionality as live on the production domain.**
