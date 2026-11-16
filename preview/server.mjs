@@ -10,7 +10,8 @@ const PREVIEW=fileURLToPath(new URL('./',import.meta.url));
 const PAGES={'/':'index.html','/dashboard':'index.html','/payouts':'payouts.html','/profile':'profile.html','/contact':'contact.html'};
 const ASSETS=new Set(['app.js','style.css','dashboard-v2.css','marketplace.css','marketplace.js',
  'workspaces.css','workspaces.js','theme.css','theme.js','admin-finances.css','admin-finances.js',
- 'profile.js','payouts.js','contact.js','contact-v3.css','clipboard.js','preview.png','notifications-sw.js']);
+ 'profile.js','payouts.js','contact.js','contact-v3.css','clipboard.js','preview.png','notifications-sw.js',
+ 'qualifications.js','qualifications.css']);
 const MIME={'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'};
 const sessions=new Map(), streams=new Set();
 const TODAY=Date.now();
