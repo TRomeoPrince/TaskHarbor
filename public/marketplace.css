@@ -83,3 +83,20 @@
   #marketplace-summary .market-stat-label {font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){#marketplace-summary a{transition:none!important}}
+
+/* Find Work vs My Tasks: separate worker task scopes with accessible pressed state. */
+#market-view-switch {display:inline-flex;gap:6px;border:1px solid var(--market-line);
+  background:#f3f8f4;padding:6px;border-radius:13px;margin:3px 0 12px}
+#market-view-switch[hidden]{display:none!important}
+#market-view-switch button{border:1px solid transparent;border-radius:9px;
+  background:transparent;color:#456d57;padding:9px 16px;min-height:43px;
+  font-size:13px;font-weight:750}
+#market-view-switch button[aria-pressed="true"]{background:#fff;color:#17624a;
+  box-shadow:0 2px 12px #224c3020;border-color:#d0e6d5}
+#market-view-switch button:focus-visible{outline:3px solid #248b62;outline-offset:2px}
+html[data-theme="dark"] #market-view-switch{background:var(--theme-surface-alt);
+  border-color:var(--theme-border)}
+html[data-theme="dark"] #market-view-switch button{background:transparent;color:var(--theme-text-soft)}
+html[data-theme="dark"] #market-view-switch button[aria-pressed="true"]{background:var(--theme-panel);
+  color:var(--theme-accent);border-color:var(--theme-border)}
+@media(max-width:460px){#market-view-switch{display:grid;grid-template-columns:1fr 1fr;width:100%}}
