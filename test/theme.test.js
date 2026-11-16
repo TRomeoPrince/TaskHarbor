@@ -50,7 +50,7 @@ test('theme controller reads preference before DOM render and defaults to light'
   assert.equal(first.root.TaskHarborTheme.get(),'light');
 });
 
-test('switcher exposes exactly Light/Dark, persists selection and does not duplicate',()=>{
+test('switcher exposes nine creative themes, persists selection and does not duplicate',()=>{
   const lab=runTheme('light');
   lab.events.get('DOMContentLoaded')();
   assert.equal(lab.header.children.length,1);
@@ -58,7 +58,8 @@ test('switcher exposes exactly Light/Dark, persists selection and does not dupli
   const select=label.children.find(x=>x.tag==='select');
   assert.ok(select);
   assert.equal(select.value,'light');
-  assert.deepEqual(select.children.map(option=>option.value),['light','dark']);
+  assert.deepEqual(select.children.map(option=>option.value),
+    ['light','dark','eden','sunrise','ocean','orchid','aurora','velvet','cosmos']);
   select.value='dark';
   select.events.change();
   assert.equal(lab.root.TaskHarborTheme.get(),'dark');
@@ -67,6 +68,9 @@ test('switcher exposes exactly Light/Dark, persists selection and does not dupli
   lab.root.TaskHarborTheme.set('light');
   assert.equal(select.value,'light');
   assert.equal(lab.stored.get('taskharbor.theme'),'light');
+  const available=lab.root.TaskHarborTheme.available();
+  assert.equal(available.length,9);
+  assert.ok(available.every(item=>item.label&&item.description));
 });
 
 test('theme change in another tab updates this tab but does not write back',()=>{
@@ -108,4 +112,21 @@ test('theme assets load before layout paint and dark rules apply to all main pag
       assert.ok(source.includes("'/"+name+"': '"+name+"'"), backend+' must serve '+name);
     }
   }
+});
+
+test('every appearance has its own palette and the correct native light/dark tone',()=>{
+  const lab=runTheme('light');
+  lab.events.get('DOMContentLoaded')();
+  const css=read('theme.css');
+  for(const entry of lab.root.TaskHarborTheme.available()){
+    lab.root.TaskHarborTheme.set(entry.id);
+    assert.equal(lab.root.TaskHarborTheme.get(),entry.id);
+    assert.equal(lab.doc.documentElement.style.colorScheme,entry.tone);
+    if(entry.id!=='light')assert.ok(css.includes('html[data-theme="'+entry.id+'"]'),entry.id);
+    assert.ok(['light','dark'].includes(entry.tone));
+  }
+  assert.equal(lab.stored.get('taskharbor.theme'),'cosmos');
+  const gallery=readFileSync(new URL('../preview/themes.html',import.meta.url),'utf8');
+  assert.match(gallery,/id="theme-studio-grid"/);
+  assert.match(gallery,/src="\/_preview\/themes.js"/);
 });
