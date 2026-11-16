@@ -1,0 +1,18 @@
+.status-page{max-width:1050px;margin:0 auto;padding:35px 22px 90px}
+.status-page h1{font-size:clamp(28px,4vw,44px);margin:12px 0}
+.status-page .intro{max-width:780px;line-height:1.7;color:var(--theme-text-soft)}
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:13px;margin-top:24px}
+.status-card{padding:21px;border-radius:16px;border:1px solid var(--theme-border);background:var(--theme-surface)}
+.status-card h2{font-size:17px;margin:0 0 9px}
+.status-card p{font-size:13px;line-height:1.55;color:var(--theme-text-soft)}
+.status-card .phase-status{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;
+ background:var(--theme-badge-bg);color:var(--theme-accent);font-weight:800;text-transform:uppercase}
+.status-card .phase-status[data-status="blocked"],.status-card .phase-status[data-status="not-started"]{
+ background:var(--theme-warning-bg);color:var(--theme-warning-ink)}
+.status-meta{padding:16px 20px;background:var(--theme-panel);border-radius:13px;margin-top:25px;
+ border:1px solid var(--theme-border)}
+.status-meta p{margin:5px 0;font-size:13px;line-height:1.6}
+.status-links{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px}
+.status-links a{padding:11px 15px;border-radius:9px;background:var(--theme-accent);
+ color:var(--theme-accent-contrast)!important;text-decoration:none;font-size:13px;font-weight:750}
+.status-links a:focus-visible{outline:3px solid var(--theme-accent);outline-offset:2px}
