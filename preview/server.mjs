@@ -26,12 +26,12 @@ const task=(id,title,status,reward,category,extras={})=>({
  created_at:Date.now(),...extras
 });
 function fresh(){
- return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,quotes:[],phone:'',
+ return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,quotes:[],phone:'',qualifications:[],
   tasks:[
    task('demo-ai-01','Evaluate two sample AI responses','available',150,'ai'),
    task('demo-transcript-01','Transcribe a sample recording','available',280,'transcription'),
    task('demo-annotation-01','Label elements in a sample image','available',125,'annotation'),
-   task('demo-project-01','Website accessibility milestone','available',900,'project'),
+   task('demo-project-01','Website accessibility milestone','available',900,'project',{required_qualifications:[{skill:'software',minimum_level:2}],qualified:false}),
    task('demo-micro-01','Review a product description','available',50,'microtask'),
    task('demo-survey-01','Practice survey screening','available',65,'survey'),
    task('demo-transcript-02','Continue your transcription','claimed',240,'transcription',{claim_expires:Date.now()+1800000}),
@@ -77,7 +77,7 @@ function state(s){
   currencies:{USD:2,UGX:0},
   rates:[{currency:'USD',rate:1000000,updated_at:Date.now()},
    {currency:'UGX',rate:3700000000,updated_at:Date.now()}],
-  exchange:{updated_at:Date.now(),last_error:''},catalogReady:true,
+  exchange:{updated_at:Date.now(),last_error:''},catalogReady:true,qualificationsReady:true,
   tasks:admin?s.tasks:s.tasks.filter(t=>t.status==='available'||t.worker_id==='preview-worker'),
   submissions:s.submissions,
   withdrawals:s.withdrawals,transactions:[],profile:s.profile,
@@ -149,6 +149,7 @@ async function handleApi(req,res,url,s){
  if(name==='/api/claim'){
   const item=s.tasks.find(t=>t.id===body.taskId&&t.status==='available');
   if(s.role!=='worker'||!item)return error(res,400,'Choose an available sample task as Worker');
+  if(item.qualified===false)return error(res,403,'A verified qualification is required to claim this sample task');
   item.status='claimed';item.worker_id='preview-worker';
   item.claim_expires=Date.now()+1800000;update();return response(res,{ok:true});
  }
@@ -192,6 +193,33 @@ async function handleApi(req,res,url,s){
    ['expected_minutes',body.expectedMinutes?Number(body.expectedMinutes):null]
   ])if(value!==undefined)item[key]=value;
   update();return response(res,{ok:true});
+ }
+ if(name==='/api/qualification/requirement'){
+  if(s.role!=='admin')return error(res,403,'Admin demo only');
+  const item=s.tasks.find(task=>task.id===body.taskId);
+  if(!item)return error(res,404,'Sample task not found');
+  const levels={beginner:1,intermediate:2,advanced:3};
+  const min=levels[body.minimumLevel];
+  if(!min||!['ai_evaluation','transcription','annotation','research','software','design','data_entry'].includes(body.skill))
+   return error(res,400,'Invalid sample skill or level');
+  item.required_qualifications=[{skill:body.skill,minimum_level:min}];
+  item.qualified=s.qualifications.some(q=>q.skill===body.skill&&q.level>=min);
+  update();return response(res,{ok:true,preview:true});
+ }
+ if(name==='/api/qualification/grant'){
+  if(s.role!=='admin')return error(res,403,'Admin demo only');
+  const levels={beginner:1,intermediate:2,advanced:3};
+  const level=levels[body.level];
+  if(String(body.workerEmail||'').trim().toLowerCase()!=='worker@example.test'||!level)
+   return error(res,400,'Only worker@example.test can be granted synthetic preview qualifications');
+  if(!['ai_evaluation','transcription','annotation','research','software','design','data_entry'].includes(body.skill))
+   return error(res,400,'Invalid sample skill');
+  s.qualifications=s.qualifications.filter(q=>q.skill!==body.skill);
+  s.qualifications.push({skill:body.skill,level});
+  for(const item of s.tasks)if(item.required_qualifications?.length)
+   item.qualified=item.required_qualifications.every(req=>
+     s.qualifications.some(q=>q.skill===req.skill&&q.level>=req.minimum_level));
+  update();return response(res,{ok:true,preview:true});
  }
  if(name==='/api/tasks'||name==='/api/quick-task'){
   if(s.role!=='admin')return error(res,403,'Admin demo only');
