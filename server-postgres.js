@@ -225,6 +225,8 @@ const server = http.createServer(
           '/marketplace.js': 'marketplace.js',
           '/workspaces.css': 'workspaces.css',
           '/workspaces.js': 'workspaces.js',
+          '/admin-finances.js': 'admin-finances.js',
+          '/admin-finances.css': 'admin-finances.css',
           '/contact-v3.css': 'contact-v3.css',
           '/payouts': 'payouts.html',
           '/payouts/': 'payouts.html',
