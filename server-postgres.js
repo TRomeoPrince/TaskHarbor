@@ -1,4 +1,5 @@
 import {contactRoute,notificationTick} from './contact-notifications.js';
+import {catalogRoute,catalogState} from './task-catalog.js';
 import './config.js';
 import { hash, verify } from './auth.js';
 import { profileRoute } from './profile-postgres.js';
@@ -601,6 +602,12 @@ const server = http.createServer(
           return;
         }
 
+        const catalogResult = await catalogRoute(db,user,path,body,req.method);
+        if(catalogResult !== null){
+          broadcast();
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(catalogResult));
+        }
         const contactResult = await contactRoute(db,user,path,req.method==='GET'?Object.fromEntries(new URL(req.url,'http://localhost').searchParams):body,req.method);
         if(contactResult!==null){
           if(req.method==='POST')broadcast();
@@ -879,12 +886,7 @@ const server = http.createServer(
       if (
         path === '/api/state'
       ) {
-        result =
-          await enrich(
-            db,
-            user,
-            result
-          );
+        result = await catalogState(db, await enrich(db,user,result));
       }
 
       if (
