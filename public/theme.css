@@ -1,0 +1,388 @@
+/* Shared appearance layer (loaded last): one token contract for all current/future themes.
+   Keep selector specificity explicit because the legacy styles use literal colors. */
+:root {
+  color-scheme:light;
+  --theme-bg:#f6f8f5;
+  --theme-surface:#fff;
+  --theme-surface-alt:#f5faf6;
+  --theme-panel:#edf6ef;
+  --theme-ink:#183c32;
+  --theme-text-soft:#506f5d;
+  --theme-text-muted:#647e70;
+  --theme-border:#dce8df;
+  --theme-accent:#176f56;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#e5f4ec;
+  --theme-warning-bg:#fff7e6;
+  --theme-warning-ink:#855e20;
+  --theme-link:#1c7553;
+  --theme-shadow:0 10px 34px rgba(21,57,39,.055);
+}
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --theme-bg:#0e1916;
+  --theme-surface:#192b24;
+  --theme-surface-alt:#21362c;
+  --theme-panel:#263d31;
+  --theme-ink:#ebf7ef;
+  --theme-text-soft:#c3d8ca;
+  --theme-text-muted:#abc6b6;
+  --theme-border:#365448;
+  --theme-accent:#74d4a8;
+  --theme-accent-contrast:#10221a;
+  --theme-badge-bg:#254638;
+  --theme-warning-bg:#4e3823;
+  --theme-warning-ink:#ffe0ab;
+  --theme-link:#99e8bf;
+  --theme-shadow:0 10px 34px rgba(0,0,0,.22);
+  --th-ink:var(--theme-ink);
+  --th-ink-soft:var(--theme-text-soft);
+  --th-green:var(--theme-accent);
+  --th-mint:var(--theme-panel);
+  --th-cream:var(--theme-bg);
+  --th-border:var(--theme-border);
+  --th-gold:#e9c38b;
+  --th-shadow:var(--theme-shadow);
+  --market-forest:var(--theme-accent);
+  --market-mint:var(--theme-badge-bg);
+  --market-ink:var(--theme-ink);
+  --market-line:var(--theme-border);
+}
+.theme-switcher {
+  align-self:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:0 0 0 auto;
+  padding:0;
+  font-size:12px;
+  font-weight:700;
+  color:var(--theme-text-soft);
+  white-space:nowrap;
+}
+.site-header .theme-switcher-label {color:inherit;margin:0}
+.theme-switcher select {
+  appearance:auto;
+  display:inline-block;
+  min-width:94px;
+  min-height:38px;
+  margin:0;
+  padding:7px 11px;
+  border:1px solid var(--theme-border);
+  border-radius:10px;
+  font:inherit;
+  background:var(--theme-surface);
+  color:var(--theme-ink);
+  cursor:pointer;
+}
+.theme-switcher select:focus-visible {outline:3px solid var(--theme-accent);outline-offset:2px}
+@media(max-width:760px) {
+  .site-header .theme-switcher {margin-left:auto}
+  body:has(#landing:not([hidden])) .site-header,
+  body:has(#auth:not([hidden])) .site-header {flex-wrap:wrap}
+  .site-header #guest-nav {flex-wrap:wrap;gap:12px}
+}
+@media(max-width:440px){
+  .theme-switcher-label {display:none}
+  .theme-switcher select {min-width:83px}
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .support-page,
+html[data-theme="dark"] body:has(#landing:not([hidden])),
+html[data-theme="dark"] body:has(#auth:not([hidden])) {
+  background:var(--theme-bg);
+  color:var(--theme-ink);
+}
+html[data-theme="dark"] .site-header,
+html[data-theme="dark"] body:has(#landing:not([hidden])) .site-header,
+html[data-theme="dark"] body:has(#auth:not([hidden])) .site-header {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  box-shadow:0 5px 22px #0002;
+}
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .site-header .brand,
+html[data-theme="dark"] body:has(#landing:not([hidden])) .brand,
+html[data-theme="dark"] body:has(#auth:not([hidden])) .brand,
+html[data-theme="dark"] body:has(#workspace:not([hidden])) .brand,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4 {
+  color:var(--theme-ink);
+}
+html[data-theme="dark"] .site-header nav a,
+html[data-theme="dark"] .site-header #guest-nav a,
+html[data-theme="dark"] .support-page .site-header nav a {
+  color:var(--theme-text-soft);
+}
+html[data-theme="dark"] .site-header nav a:hover,
+html[data-theme="dark"] .site-header nav a[aria-current=page],
+html[data-theme="dark"] .site-header #guest-nav a:hover,
+html[data-theme="dark"] .support-page .site-header nav a[aria-current="page"] {
+  background:var(--theme-panel);
+  color:var(--theme-accent);
+}
+html[data-theme="dark"] .site-header #guest-nav .guest-signup,
+html[data-theme="dark"] a.welcome-button,
+html[data-theme="dark"] #landing .welcome-button,
+html[data-theme="dark"] .workspace-hero-links a:first-child,
+html[data-theme="dark"] #marketplace-intro .market-primary,
+html[data-theme="dark"] button:not(.secondary):not(.thread-row):not(.theme-button) {
+  background:var(--theme-accent);
+  color:var(--theme-accent-contrast);
+}
+html[data-theme="dark"] button.secondary,
+html[data-theme="dark"] body:has(#workspace:not([hidden])) #logout,
+html[data-theme="dark"] #market-controls button {
+  background:var(--theme-panel);
+  color:var(--theme-ink);
+  border:1px solid var(--theme-border);
+}
+html[data-theme="dark"] a:not(.brand):not(.welcome-button):not(.market-primary):not(.market-stat) {color:var(--theme-link)}
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .id,
+html[data-theme="dark"] .site-header #identity,
+html[data-theme="dark"] .workspace-tools label,
+html[data-theme="dark"] .wallet-panel-title p,
+html[data-theme="dark"] #workspace .wallet-policy,
+html[data-theme="dark"] .workspace-section .section-heading p,
+html[data-theme="dark"] .eyebrow,
+html[data-theme="dark"] .form-hint {
+  color:var(--theme-text-muted);
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+html[data-theme="dark"] .workspace-tools select,
+html[data-theme="dark"] .workspace-section .section-heading select,
+html[data-theme="dark"] #market-controls input,
+html[data-theme="dark"] #market-controls select,
+html[data-theme="dark"] .support-form input,
+html[data-theme="dark"] .support-form textarea,
+html[data-theme="dark"] #admin-finances-query,
+html[data-theme="dark"] #withdrawal-filter,
+html[data-theme="dark"] .work-field input,
+html[data-theme="dark"] .work-field select,
+html[data-theme="dark"] .work-field textarea {
+  background:var(--theme-surface-alt);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {color:#afc7b9;opacity:1}
+html[data-theme="dark"] input:disabled,
+html[data-theme="dark"] button:disabled {opacity:.55}
+html[data-theme="dark"] .row,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] article,
+html[data-theme="dark"] #balances .wallet-card,
+html[data-theme="dark"] #workspace #withdrawBox,
+html[data-theme="dark"] #tasks .task-listing,
+html[data-theme="dark"] #tasks .task-detail,
+html[data-theme="dark"] .support-card,
+html[data-theme="dark"] .work-dialog,
+html[data-theme="dark"] .admin-finances,
+html[data-theme="dark"] .market-admin-catalog,
+html[data-theme="dark"] .admin-overview,
+html[data-theme="dark"] #workspace #admin {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+  box-shadow:var(--theme-shadow);
+}
+html[data-theme="dark"] #balances .wallet-available,
+html[data-theme="dark"] #balances .wallet-pending,
+html[data-theme="dark"] .work-dialog,
+html[data-theme="dark"] .admin-overview,
+html[data-theme="dark"] #workspace #admin,
+html[data-theme="dark"] #workspace #withdrawBox {
+  background:var(--theme-surface);
+}
+html[data-theme="dark"] .badge,
+html[data-theme="dark"] #tasks .market-category-tag {
+  background:var(--theme-badge-bg);
+  border-color:var(--theme-border);
+  color:var(--theme-accent);
+}
+html[data-theme="dark"] .copy-field,
+html[data-theme="dark"] #tasks .task-detail .copy-field,
+html[data-theme="dark"] #tasks .task-detail .message,
+html[data-theme="dark"] .message,
+html[data-theme="dark"] .step,
+html[data-theme="dark"] .editor-row,
+html[data-theme="dark"] .action-panel,
+html[data-theme="dark"] .market-policy,
+html[data-theme="dark"] #tasks .market-policy,
+html[data-theme="dark"] .thread-row,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .member-row,
+html[data-theme="dark"] .conversation-panel,
+html[data-theme="dark"] .message-stream article,
+html[data-theme="dark"] .support-card.compact-help {
+  background:var(--theme-surface-alt);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme="dark"] #workspace #connection,
+html[data-theme="dark"] #tasks .task-open,
+html[data-theme="dark"] #tasks .task-category-icon,
+html[data-theme="dark"] #balances .wallet-card .wallet-icon,
+html[data-theme="dark"] .admin-shortcuts a,
+html[data-theme="dark"] .section-icon,
+html[data-theme="dark"] .thread-row .thread-status {
+  background:var(--theme-panel);
+  border-color:var(--theme-border);
+  color:var(--theme-accent);
+}
+html[data-theme="dark"] #tasks .task-summary:hover,
+html[data-theme="dark"] .thread-row:hover,
+html[data-theme="dark"] .admin-finances-table tbody tr:hover {
+  background:#2b4236;
+}
+html[data-theme="dark"] #tasks .task-title,
+html[data-theme="dark"] #tasks .task-reward,
+html[data-theme="dark"] #tasks .task-open,
+html[data-theme="dark"] #tasks .task-metadata,
+html[data-theme="dark"] #tasks .task-detail .task-detail-lead,
+html[data-theme="dark"] #tasks .market-policy,
+html[data-theme="dark"] #marketplace-summary .market-stat-label,
+html[data-theme="dark"] #marketplace-summary .market-stat-detail,
+html[data-theme="dark"] #marketplace-intro p,
+html[data-theme="dark"] .market-results-row,
+html[data-theme="dark"] #market-controls label,
+html[data-theme="dark"] .wallet-card span,
+html[data-theme="dark"] .wallet-card small,
+html[data-theme="dark"] #balances .wallet-card span,
+html[data-theme="dark"] #balances .wallet-card small {
+  color:var(--theme-text-soft);
+}
+html[data-theme="dark"] #tasks .task-reward {color:var(--theme-accent)}
+html[data-theme="dark"] #referral-box,
+html[data-theme="dark"] #marketplace-intro,
+html[data-theme="dark"] .workspace-hero,
+html[data-theme="dark"] .support-intro,
+html[data-theme="dark"] #landing .welcome-cta,
+html[data-theme="dark"] #landing .welcome-strip {
+  background:linear-gradient(120deg,#223d30,#1a2d25 68%,#403629);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme="dark"] #marketplace-summary .market-stat,
+html[data-theme="dark"] #market-empty {
+  background:var(--theme-surface);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+  box-shadow:var(--theme-shadow);
+}
+html[data-theme="dark"] #marketplace-attention,
+html[data-theme="dark"] #notice:not(:empty),
+html[data-theme="dark"] #profile-notice:not(:empty),
+html[data-theme="dark"] .work-status:not(:empty) {
+  background:var(--theme-warning-bg);
+  color:var(--theme-warning-ink);
+  border-color:#8e6d42;
+}
+html[data-theme="dark"] .workspace-kicker,
+html[data-theme="dark"] #marketplace-intro .market-kicker,
+html[data-theme="dark"] .support-intro .eyebrow,
+html[data-theme="dark"] #landing .welcome-kicker {
+  color:var(--theme-accent);
+}
+html[data-theme="dark"] .workspace-hero h2,
+html[data-theme="dark"] .workspace-hero p,
+html[data-theme="dark"] .workspace-art .art-card strong,
+html[data-theme="dark"] .support-intro h1,
+html[data-theme="dark"] .support-intro p:not(.eyebrow),
+html[data-theme="dark"] .support-illustration strong,
+html[data-theme="dark"] #landing h1,
+html[data-theme="dark"] #landing .welcome-steps h3,
+html[data-theme="dark"] #landing .welcome-cta h2,
+html[data-theme="dark"] #landing .welcome-footer .brand {
+  color:var(--theme-ink);
+}
+html[data-theme="dark"] #landing .welcome-hero {background:radial-gradient(circle at 75% 40%,#254634 0%,#14251d 47%,transparent 82%)}
+html[data-theme="dark"] #landing h1 em,
+html[data-theme="dark"] #landing h2 em,
+html[data-theme="dark"] .workspace-hero h2 em {color:#f1ca8b}
+html[data-theme="dark"] #landing .hero-description,
+html[data-theme="dark"] #landing .hero-footnote,
+html[data-theme="dark"] #landing .welcome-steps p,
+html[data-theme="dark"] #landing .how-heading>p:last-child,
+html[data-theme="dark"] #landing .welcome-cta p:last-child,
+html[data-theme="dark"] #landing .welcome-footer p,
+html[data-theme="dark"] .workspace-hero-copy p,
+html[data-theme="dark"] .support-intro p:not(.eyebrow) {color:var(--theme-text-soft)}
+html[data-theme="dark"] .illustration-card,
+html[data-theme="dark"] .floating-note,
+html[data-theme="dark"] .workspace-art .art-card,
+html[data-theme="dark"] .support-illustration,
+html[data-theme="dark"] .welcome-steps>div,
+html[data-theme="dark"] #landing .welcome-steps>div {
+  background:var(--theme-surface-alt);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme="dark"] .workspace-art .art-circle {background:linear-gradient(145deg,#294d3b,#53623a);border-color:#51765e}
+html[data-theme="dark"] .workspace-art .art-mini {background:#554327;color:#ffe9c1}
+html[data-theme="dark"] .workspace-art .art-mini span,
+html[data-theme="dark"] .workspace-art .art-card small,
+html[data-theme="dark"] .support-illustration small {color:var(--theme-text-soft)}
+html[data-theme="dark"] body:has(#auth:not([hidden])) #auth {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+}
+html[data-theme="dark"] #landing .illustration-card .illustration-task,
+html[data-theme="dark"] #landing .illustration-bottom {color:var(--theme-ink)}
+html[data-theme="dark"] #landing .illustration-task small,
+html[data-theme="dark"] #landing .illustration-bottom small {color:var(--theme-text-muted)}
+html[data-theme="dark"] .support-form label,
+html[data-theme="dark"] .section-lead,
+html[data-theme="dark"] .form-hint,
+html[data-theme="dark"] .thread-row .thread-meta,
+html[data-theme="dark"] .thread-row .thread-status.closed,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .member-row p,
+html[data-theme="dark"] .message-stream p,
+html[data-theme="dark"] .message-stream small,
+html[data-theme="dark"] .alert-row p,
+html[data-theme="dark"] .compact-help p,
+html[data-theme="dark"] .work-hint,
+html[data-theme="dark"] .work-field,
+html[data-theme="dark"] .admin-finances-search label,
+html[data-theme="dark"] .admin-finances-table .admin-finances-member small,
+html[data-theme="dark"] .admin-finances-help {
+  color:var(--theme-text-soft);
+}
+html[data-theme="dark"] .message-stream article.from-admin {background:#294737}
+html[data-theme="dark"] .support-count,
+html[data-theme="dark"] .thread-row .thread-status.closed {background:#3f4032;color:#f0dbb8}
+html[data-theme="dark"] .alert-row {border-color:var(--theme-border)}
+html[data-theme="dark"] .admin-finances-table th,
+html[data-theme="dark"] .admin-finances-table td {border-color:var(--theme-border)}
+html[data-theme="dark"] .admin-finances-table thead th {
+  background:var(--theme-surface-alt);
+  color:var(--theme-text-soft);
+}
+html[data-theme="dark"] .admin-finances-table .admin-finances-negative {color:#ff9990}
+html[data-theme="dark"] .admin-finances-table .admin-finances-requested {color:#f6d087}
+html[data-theme="dark"] .admin-finances-scroll {border-color:var(--theme-border)}
+html[data-theme="dark"] #mobile-work-nav {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  box-shadow:0 -8px 24px #0004;
+}
+html[data-theme="dark"] #mobile-work-nav a {color:var(--theme-text-soft)}
+html[data-theme="dark"] .work-overlay {background:rgba(0,0,0,.78)}
+html[data-theme="dark"] .work-actions button.secondary {color:var(--theme-ink)}
+html[data-theme="dark"] .market-admin-catalog summary {color:var(--theme-accent)}
+html[data-theme="dark"] .market-admin-catalog p,
+html[data-theme="dark"] .admin-zone .admin-section-heading p:last-child {color:var(--theme-text-soft)}
+html[data-theme="dark"] .admin-zone .admin-section-heading,
+html[data-theme="dark"] #tasks .task-detail,
+html[data-theme="dark"] #tasks .market-policy {border-color:var(--theme-border)}
+@media(prefers-reduced-motion:reduce) {
+  .theme-switcher, .theme-switcher select {transition:none}
+}
