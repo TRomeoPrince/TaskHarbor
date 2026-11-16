@@ -63,3 +63,24 @@ test('marketplace assets are served by each server and hooked into existing task
   }
   assert.match(html,/href="\/dashboard"/);
 });
+
+
+test('Find Work never mixes claimed jobs; My Tasks includes only signed-in worker assignments',()=>{
+  const m=market();
+  const other={id:'worker-other',title:'Other worker task',status:'claimed',reward:900,worker_id:'other'};
+  const all=[...tasks,other];
+  assert.deepEqual(m.scopeTasks(all,{id:'worker-1',role:'worker'},'discover').map(x=>x.id),['a','d']);
+  assert.deepEqual(m.scopeTasks(all,{id:'worker-1',role:'worker'},'mine').map(x=>x.id),['b','c','e']);
+  assert.equal(m.scopeTasks(all,{id:'other',role:'worker'},'mine').length,1);
+  assert.equal(m.scopeTasks(all,{id:'admin',role:'admin'},'mine').length,6);
+});
+
+test('worker discovery and assignments have explicit accessible controls',()=>{
+  const html=source('index.html');
+  const css=source('marketplace.css');
+  assert.match(html,/id="market-view-switch"/);
+  assert.match(html,/data-market-view="discover" aria-pressed="true"/);
+  assert.match(html,/data-market-view="mine" aria-pressed="false"/);
+  assert.match(html,/data-market-view-link="mine"/);
+  assert.match(css,/#market-view-switch button\[aria-pressed="true"\]/);
+});
