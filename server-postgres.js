@@ -1,5 +1,6 @@
 import {contactRoute,notificationTick} from './contact-notifications.js';
 import {catalogRoute,catalogState} from './task-catalog.js';
+import {adminFinanceSnapshot} from './admin-finances-postgres.js';
 import './config.js';
 import { hash, verify } from './auth.js';
 import { profileRoute } from './profile-postgres.js';
@@ -602,6 +603,14 @@ const server = http.createServer(
           );
 
           return;
+        }
+
+        if (path === '/api/admin-finances') {
+          if (req.method !== 'GET') fail('Method not allowed', 405);
+          const params = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
+          const financeData = await adminFinanceSnapshot(db, user, params);
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(financeData));
         }
 
         const catalogResult = await catalogRoute(db,user,path,body,req.method);
