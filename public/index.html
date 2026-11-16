@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="/dashboard-v2.css">
 <link rel="stylesheet" href="/marketplace.css">
 <link rel="stylesheet" href="/workspaces.css">
+<link rel="stylesheet" href="/admin-finances.css">
 </head><body><header class="site-header"><a class="brand" href="/">TaskHarbor<span class="brand-dot">.</span></a><nav aria-label="Main navigation" id="main-nav" hidden><a href="/dashboard" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a><a href="/payouts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M7 14h4"/></svg><span>Payouts</span></a><a href="/profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>My profile</span></a><a href="/contact">Contact &amp; alerts</a></nav><nav id="guest-nav" aria-label="Welcome navigation"><a class="how-link" href="#how-it-works">How it works</a><a href="#sign-in">Sign in</a><a class="guest-signup" href="#sign-up">Sign up <span aria-hidden="true"><svg class="welcome-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></a><a href="/contact">Contact &amp; alerts</a></nav><span id="identity" hidden>Work, tracked clearly.</span><button id="logout" hidden>Log out</button></header><main><div id="notice" role="status"></div><section id="landing" aria-labelledby="welcome-title">
   <div class="welcome-hero">
     <div class="hero-copy">
@@ -75,9 +76,34 @@
   <div><span>Withdrawal requests</span><strong id="admin-withdrawal-count">0</strong><small>Awaiting manual processing</small></div>
  </div>
  <nav class="admin-shortcuts" aria-label="Admin workspace shortcuts">
-  <a href="#admin">Create &amp; import</a><a href="#tasks-section">Task registry</a><a href="#submissions-section">Review submissions</a><a href="#withdrawals-section">Withdrawals</a><a href="/contact">Support center</a>
+  <a href="#admin">Create &amp; import</a><a href="#tasks-section">Task registry</a><a href="#submissions-section">Review submissions</a><a href="#withdrawals-section">Payout requests</a><a href="#admin-finances">Member balances</a><a href="/contact">Support center</a>
  </nav>
  </section>
+<section class="workspace-section admin-finances" id="admin-finances" hidden aria-label="Member financial balances">
+ <div class="section-heading">
+  <div><p class="eyebrow">ADMIN ONLY · FINANCIAL OVERSIGHT</p><h2>Member balances</h2>
+   <p>Actual ledger balances and unreleased task rewards for individual workers, in USD.</p></div>
+ </div>
+ <form id="admin-finances-search" class="admin-finances-search">
+  <label for="admin-finances-query">Find member by email or username
+   <input id="admin-finances-query" name="search" type="search" maxlength="80" autocomplete="off" placeholder="Search member"></label>
+  <button type="submit" class="secondary">Search</button>
+  <button id="admin-finances-refresh" type="button" class="secondary">Refresh balances</button>
+ </form>
+ <p id="admin-finances-status" role="status" aria-live="polite">Balances load for administrators only.</p>
+ <div class="admin-finances-scroll" tabindex="0" aria-label="Scrollable member balances">
+  <table class="admin-finances-table">
+   <thead><tr><th scope="col">Member</th><th scope="col">Available</th><th scope="col">Pending review</th><th scope="col">Held</th><th scope="col">Lifetime earned</th><th scope="col">Withdrawn</th><th scope="col">Requested</th></tr></thead>
+   <tbody id="admin-finances-rows"></tbody>
+  </table>
+ </div>
+ <div class="admin-finances-pager">
+  <button id="admin-finances-prev" type="button" class="secondary" disabled>Previous</button>
+  <span id="admin-finances-page" aria-live="polite"></span>
+  <button id="admin-finances-next" type="button" class="secondary" disabled>Next</button>
+ </div>
+ <p class="admin-finances-help">Requested amounts are already reserved from the available balance. Pending review and held amounts cannot be withdrawn. Balances update from existing financial records; this panel does not move money.</p>
+</section>
 <section id="referral-box" class="row"><h2>Invite friends</h2><p id="referral-info"></p><label>Your referral link<div class="link-copy"><input id="referral-link" readonly><button type="button" data-copy-target="referral-link">Copy link</button></div></label><p id="referral-stats"></p></section><section id="admin" hidden class="admin-zone"><div class="admin-section-heading"><p class="eyebrow">PUBLISHER WORKSPACE</p><h2>Manage work opportunities</h2><p>Create and import new opportunities for your workers. Every reward remains subject to approval.</p></div><details class="admin-legacy-workflow"><summary>Specialized email task publishing</summary><section class="row"><p class="eyebrow">LEGACY TASK TYPE</p><h2>Create email task</h2><p>Publish an available Gmail slot without account credentials. After a member claims, request fresh details from the Telegram source, then release them privately. Their work timer starts upon release.</p><p>Fixed reward: <strong>USD 0.12</strong> · Birth date: <strong>19 May 2000</strong>. Follow-up steps are included automatically.</p><form id="quick-create"><input type="hidden" name="onDemand" value="1"><label>Worker time after account details are released (minutes)<input name="workMinutes" type="number" min="1" max="43200" value="60" required></label><button id="quick-publish">Publish available Gmail slot</button><p id="quick-result" role="status"></p></form></section></details><details class="market-admin-catalog"><summary>Classify published tasks</summary>
 <p>Label actual jobs only. Public summary is visible to workers before claiming; do not include credentials or private customer data.</p>
 <form id="market-admin-edit">
@@ -103,11 +129,16 @@
  <label for="market-minimum">Minimum reward (USD)<input id="market-minimum" type="number" min="0" step="0.01" placeholder="Any amount"></label>
  <label for="market-sort">Sort by<select id="market-sort"><option value="newest">Latest</option><option value="reward-high">Highest reward</option><option value="reward-low">Lowest reward</option><option value="title">Title A–Z</option></select></label>
  <button id="market-clear" type="button" class="secondary">Clear</button>
- </div><div class="market-results-row"><span id="market-results" role="status" aria-live="polite"></span><span>Rewards require approval</span></div><div id="tasks" class="grid"></div><p id="market-empty" hidden>No matching tasks. Try another category or clear your filters.</p></section><section class="workspace-section" id="submissions-section"><h2>Submissions</h2><div id="submissions"></div></section><section id="withdrawBox" class="workspace-section"><h2>Request withdrawal</h2><p class="row" id="uganda-payout-policy">For Ugandan networks, the minimum mobile money payout is UGX 1,000. Smaller payouts are delivered as airtime.</p><form id="withdraw"><label id="withdraw-label" for="withdraw-amount">Amount</label><input id="withdraw-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="5.00" required><p id="withdraw-limit" class="muted"></p><p id="withdraw-error" role="alert"></p><p class="muted" id="withdraw-unit-hint">Enter an amount in the selected currency. To enter dollars, select USD.</p><input name="destination" placeholder="Payment destination / account details" required maxlength="500"><button>Preview withdrawal</button></form><p class="muted">Requests reserve USD immediately. Payments are processed manually in USD; local amounts are estimates.</p></section><section class="workspace-section" id="withdrawals-section"><h2>Withdrawals & payouts</h2><div id="withdrawals"></div></section><section class="workspace-section" id="transactions-section"><h2>Transaction history</h2><div id="transactions"></div></section></section><nav id="mobile-work-nav" aria-label="Mobile worker navigation" hidden>
+ </div><div class="market-results-row"><span id="market-results" role="status" aria-live="polite"></span><span>Rewards require approval</span></div><div id="tasks" class="grid"></div><p id="market-empty" hidden>No matching tasks. Try another category or clear your filters.</p></section><section class="workspace-section" id="submissions-section"><h2>Submissions</h2><div id="submissions"></div></section><section id="withdrawBox" class="workspace-section"><h2>Request withdrawal</h2><p class="row" id="uganda-payout-policy">For Ugandan networks, the minimum mobile money payout is UGX 1,000. Smaller payouts are delivered as airtime.</p><form id="withdraw"><label id="withdraw-label" for="withdraw-amount">Amount</label><input id="withdraw-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="5.00" required><p id="withdraw-limit" class="muted"></p><p id="withdraw-error" role="alert"></p><p class="muted" id="withdraw-unit-hint">Enter an amount in the selected currency. To enter dollars, select USD.</p><input name="destination" placeholder="Payment destination / account details" required maxlength="500"><button>Preview withdrawal</button></form><p class="muted">Requests reserve USD immediately. Payments are processed manually in USD; local amounts are estimates.</p></section><section class="workspace-section" id="withdrawals-section">
+ <div class="section-heading"><div><h2>Withdrawals &amp; payouts</h2><p id="withdrawals-count" role="status">Your payout requests</p></div>
+ <label id="withdrawal-filter-wrap" for="withdrawal-filter" hidden>Show requests
+  <select id="withdrawal-filter"><option value="requested">Requested (unpaid)</option><option value="all">All</option><option value="paid">Paid</option><option value="rejected">Rejected / refunded</option></select>
+ </label></div><div id="withdrawals"></div>
+</section><section class="workspace-section" id="transactions-section"><h2>Transaction history</h2><div id="transactions"></div></section></section><nav id="mobile-work-nav" aria-label="Mobile worker navigation" hidden>
  <a href="/dashboard"><span aria-hidden="true">⌂</span>Home</a>
  <a href="#tasks-section"><span aria-hidden="true">⌕</span>Find work</a>
  <a href="#submissions-section"><span aria-hidden="true">▤</span>My tasks</a>
  <a href="#withdrawals-section"><span aria-hidden="true">▣</span>Earnings</a>
  <a href="/profile"><span aria-hidden="true">☷</span>Profile</a>
- </nav></main><script src="/marketplace.js"></script><script src="/workspaces.js"></script><script src="/app.js"></script></body></html>
+ </nav></main><script src="/marketplace.js"></script><script src="/workspaces.js"></script><script src="/admin-finances.js"></script><script src="/app.js"></script></body></html>
 
