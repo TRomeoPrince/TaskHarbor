@@ -1,0 +1,74 @@
+{
+  "title": "TaskHarbor Development Tracker",
+  "summary": "Synthetic live preview of the evolving GitHub feature branch. A feature is complete only after unit and browser acceptance tests.",
+  "repository": "https://github.com/TRomeoPrince/TaskHarbor",
+  "pullRequest": "https://github.com/TRomeoPrince/TaskHarbor/pull/9",
+  "roadmap": "https://github.com/TRomeoPrince/TaskHarbor/blob/main/TaskHarborplan.md",
+  "tests": [
+    {
+      "name": "PostgreSQL, API and unit tests",
+      "url": "https://github.com/TRomeoPrince/TaskHarbor/actions/workflows/catalyst-task-workflows.yml"
+    },
+    {
+      "name": "Browser visual lab",
+      "url": "https://github.com/TRomeoPrince/TaskHarbor/actions/workflows/taskharbor-theme-visual-lab.yml"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "Light & dark themes",
+      "status": "verified",
+      "detail": "Desktop/mobile rendered checks, preference persistence, pages and controls"
+    },
+    {
+      "name": "Find Work vs My Tasks",
+      "status": "verified",
+      "detail": "Role-scoped cards, filters, completed browser checks"
+    },
+    {
+      "name": "Admin payouts & member balances",
+      "status": "verified-in-code",
+      "detail": "Read-only aggregate SQL, role checks, synthetic DB tests"
+    },
+    {
+      "name": "Structured submission forms",
+      "status": "partial",
+      "detail": "AI, transcription, annotation and project evidence forms; specialist tools still absent"
+    },
+    {
+      "name": "Multi-worker project slots",
+      "status": "not-started",
+      "detail": "Existing tasks single-assignment; needs capacity and work unit accounting"
+    },
+    {
+      "name": "Worker qualifications",
+      "status": "not-started",
+      "detail": "Skills metadata exists; server-side eligibility tests remain"
+    },
+    {
+      "name": "Transcription player & annotation canvas",
+      "status": "not-started",
+      "detail": "Real workspaces, media privacy, autosave and review QA"
+    },
+    {
+      "name": "Client/business portal",
+      "status": "not-started",
+      "detail": "Projects, funding verification, deliverable acceptance and permissions"
+    },
+    {
+      "name": "Authorized external partners",
+      "status": "blocked",
+      "detail": "Requires partner acceptance, callback verification and reconciliation"
+    },
+    {
+      "name": "Production release",
+      "status": "blocked",
+      "detail": "Backups, AppSail revision verification, staging security tests and approved migration"
+    }
+  ],
+  "notes": [
+    "The preview intentionally uses synthetic worker accounts, sample tasks and sample balances only.",
+    "Actions here cannot trigger a real withdrawal, worker payout, third-party integration or database write.",
+    "GitHub pushes to the preview source branch trigger preview redeployments when Railway deployment is connected."
+  ]
+}
