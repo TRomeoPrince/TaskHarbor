@@ -391,14 +391,14 @@ html[data-theme]:not([data-theme="light"]) #tasks .market-policy {border-color:v
 /* Creative collection 2026 — each palette is a full semantic appearance.
  * Light and dark remain backwards compatible; additional themes add only tokens.
  * Theme controls, task ownership, payouts and moderation logic are never modified. */
-html[data-theme="dark"]{
+html[data-theme="dark"][data-theme]{
   --theme-hero:linear-gradient(120deg,#223d30,#1a2d25 68%,#403629);
   --theme-halo:radial-gradient(circle at 75% 40%,#254634 0%,#14251d 47%,transparent 82%);
   --theme-orbit:linear-gradient(145deg,#294d3b,#53623a);
   --theme-highlight:#f1ca8b;
   --theme-negative:#ff9990;
 }
-html[data-theme="eden"]{
+html[data-theme="eden"][data-theme]{
   --theme-bg:#f3f6ee;
   --theme-surface:#fffef9;
   --theme-surface-alt:#f7f9f0;
@@ -420,7 +420,7 @@ html[data-theme="eden"]{
   --theme-highlight:#a34067;
   --theme-negative:#af3542;
 }
-html[data-theme="sunrise"]{
+html[data-theme="sunrise"][data-theme]{
   --theme-bg:#fff4e9;
   --theme-surface:#fffdf8;
   --theme-surface-alt:#fff0dd;
@@ -442,7 +442,7 @@ html[data-theme="sunrise"]{
   --theme-highlight:#9e432a;
   --theme-negative:#b33238;
 }
-html[data-theme="ocean"]{
+html[data-theme="ocean"][data-theme]{
   --theme-bg:#eaf6f9;
   --theme-surface:#faffff;
   --theme-surface-alt:#f0faff;
@@ -464,7 +464,7 @@ html[data-theme="ocean"]{
   --theme-highlight:#126b8a;
   --theme-negative:#ac334b;
 }
-html[data-theme="orchid"]{
+html[data-theme="orchid"][data-theme]{
   --theme-bg:#f7f0fb;
   --theme-surface:#fffaff;
   --theme-surface-alt:#f7effd;
@@ -486,7 +486,7 @@ html[data-theme="orchid"]{
   --theme-highlight:#924477;
   --theme-negative:#aa3359;
 }
-html[data-theme="aurora"]{
+html[data-theme="aurora"][data-theme]{
   --theme-bg:#081b21;
   --theme-surface:#123038;
   --theme-surface-alt:#193c43;
@@ -508,7 +508,7 @@ html[data-theme="aurora"]{
   --theme-highlight:#e8e6ac;
   --theme-negative:#ffa7a2;
 }
-html[data-theme="velvet"]{
+html[data-theme="velvet"][data-theme]{
   --theme-bg:#1e1422;
   --theme-surface:#322238;
   --theme-surface-alt:#3f2d46;
@@ -530,7 +530,7 @@ html[data-theme="velvet"]{
   --theme-highlight:#ffddab;
   --theme-negative:#ffa2ab;
 }
-html[data-theme="cosmos"]{
+html[data-theme="cosmos"][data-theme]{
   --theme-bg:#0e1530;
   --theme-surface:#192542;
   --theme-surface-alt:#243153;
