@@ -27,7 +27,7 @@ const task=(id,title,status,reward,category,extras={})=>({
  created_at:Date.now(),...extras
 });
 function fresh(){
- return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,quotes:[],phone:'',qualifications:[],
+ return {id:randomUUID(),role:'worker',last:Date.now(),createdTasks:0,quotes:[],phone:'',qualifications:[],projects:[],
   tasks:[
    task('demo-ai-01','Evaluate two sample AI responses','available',150,'ai'),
    task('demo-transcript-01','Transcribe a sample recording','available',280,'transcription'),
@@ -124,6 +124,7 @@ async function handleApi(req,res,url,s){
   streams.add(res);req.on('close',()=>streams.delete(res));return;
  }
  if(name==='/api/state')return response(res,state(s));
+ if(name==='/api/preview/projects'&&req.method==='GET')return response(res,{projects:s.projects});
  if(name==='/api/admin-finances')return s.role==='admin'
   ?response(res,finance(s,url.searchParams.get('search')||'')):error(res,403,'Admin demo only');
  if(name==='/api/profile'&&req.method==='GET')return response(res,{
@@ -145,6 +146,26 @@ async function handleApi(req,res,url,s){
  }
  let body;
  try{body=JSON.parse(raw||'{}')}catch{return error(res,400,'Invalid JSON')}
+ if(name==='/api/preview/project'){
+  const title=String(body.title||'').trim().slice(0,120);
+  const type=String(body.category||'');
+  const units=Number(body.units),rewardCents=Math.round(Number(body.rewardAmount)*100);
+  const kinds=['microtask','survey','ai','transcription','annotation','project'];
+  if(!title||!kinds.includes(type)||!Number.isSafeInteger(units)||units<1||units>10000||
+    !Number.isSafeInteger(rewardCents)||rewardCents<1||rewardCents>100000||
+    units*rewardCents>100000000)return error(res,400,'Invalid project scope or sample budget');
+  if(s.projects.length>=25)return error(res,400,'The preview allows 25 draft projects per session');
+  const project={id:randomUUID(),title,category:type,units,rewardCents,
+    estimatedBudgetCents:units*rewardCents,status:'draft',
+    fundingStatus:'unfunded',acceptedUnits:0,createdAt:new Date().toISOString()};
+  s.projects.unshift(project);return response(res,{ok:true,project});
+ }
+ if(name==='/api/preview/project-review'){
+  const project=s.projects.find(item=>item.id===body.projectId&&item.status==='draft');
+  if(!project)return error(res,400,'Sample project must be an editable draft');
+  project.status='awaiting_review';
+  return response(res,{ok:true,project});
+ }
  if(name==='/api/login'||name==='/api/register'||name==='/api/logout')
   return response(res,{ok:true,preview:true});
  if(name==='/api/claim'){
@@ -304,10 +325,14 @@ export const server=http.createServer(async(req,res)=>{
  if(route==='/health')return response(res,{ok:true,preview:true});
  if(route==='/robots.txt'){res.writeHead(200,{'Content-Type':'text/plain'});return res.end('User-agent: *\nDisallow: /\n')}
  if(route==='/api/preview/status')return response(res,previewStatus());
+ if(route==='/business'){
+  res.writeHead(200,{'Content-Type':'text/html'});
+  return res.end(readFileSync(path.join(PREVIEW,'business.html')));
+ }
  if(route==='/status'||route==='/_preview/status'){
   res.writeHead(200,{'Content-Type':'text/html'});return res.end(readFileSync(path.join(PREVIEW,'status.html')));
  }
- if(['/_preview/toolbar.js','/_preview/toolbar.css','/_preview/status.js','/_preview/status.css'].includes(route)){
+ if(['/_preview/toolbar.js','/_preview/toolbar.css','/_preview/status.js','/_preview/status.css','/_preview/business.js','/_preview/business.css'].includes(route)){
   const file=path.join(PREVIEW,path.basename(route));
   res.writeHead(200,{'Content-Type':MIME[path.extname(file)]});
   return res.end(readFileSync(file));
