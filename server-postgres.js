@@ -276,9 +276,12 @@ const server = http.createServer(
       // production cookies to Catalyst's preview hostname or unrelated domains.
       const requestHost = (req.headers.host || '').split(':')[0].toLowerCase();
       const sharedSite = requestHost === 'taskharbor.cc.cd' || requestHost === 'www.taskharbor.cc.cd';
-      const cookieDomain = sharedSite ? '; Domain=taskharbor.cc.cd' : '';
+      // A host-only session cookie always survives navigation within the
+      // current hostname, even if a browser rejects a Domain attribute.
+      // Keep a separately named shared cookie for apex/www transitions.
       const cookieSecure = sharedSite || publicOrigin?.startsWith('https:') ? '; Secure' : '';
-      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieDomain + cookieSecure;
+      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieSecure;
+      const sharedCookieOptions = sharedSite ? cookieOptions + '; Domain=taskharbor.cc.cd' : null;
 
       const allowedOrigins = new Set([
         `http://${req.headers.host}`,
@@ -324,7 +327,7 @@ const server = http.createServer(
       // Accept the first *valid* token rather than assuming the first
       // cookie is current. Limit candidates to bound database queries.
       const cookieTokens = [...(req.headers.cookie || '')
-        .matchAll(/(?:^|;\s*)session=([a-f0-9]{64})(?=;|$)/g)]
+        .matchAll(/(?:^|;\s*)(?:session|session_shared)=([a-f0-9]{64})(?=;|$)/g)]
         .slice(0, 5)
         .map(m => m[1]);
       let token = '';
@@ -492,10 +495,15 @@ const server = http.createServer(
             86400000
         );
 
-        res.setHeader(
-          'Set-Cookie',
+        const loginCookies = [
           `session=${sessionToken}${cookieOptions}; Max-Age=86400`
-        );
+        ];
+        if (sharedCookieOptions) {
+          loginCookies.push(
+            `session_shared=${sessionToken}${sharedCookieOptions}; Max-Age=86400`
+          );
+        }
+        res.setHeader('Set-Cookie', loginCookies);
 
         result = { ok: true };
       } else {
@@ -772,10 +780,18 @@ const server = http.createServer(
               );
             }
 
-            res.setHeader(
-              'Set-Cookie',
+            const logoutCookies = [
               `session=${cookieOptions}; Max-Age=0`
-            );
+            ];
+            if (sharedCookieOptions) {
+              // Remove both new cookies and the legacy Domain=session
+              // cookie so old tokens cannot shadow subsequent logins.
+              logoutCookies.push(
+                `session=${sharedCookieOptions}; Max-Age=0`,
+                `session_shared=${sharedCookieOptions}; Max-Age=0`
+              );
+            }
+            res.setHeader('Set-Cookie', logoutCookies);
           } else if (
             path === '/api/claim'
           ) {
