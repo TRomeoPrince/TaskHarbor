@@ -19,7 +19,9 @@ test('dashboard still renders and connects live updates with an older server res
  assert.equal(get('withdraw-amount').max,'478');get('withdraw-amount').value='1000';get('withdraw-amount').oninput();assert.match(get('withdraw-error').textContent,/Maximum: 478 UGX/);
  context.currentReferralPolicy=referralPolicy;
  vm.runInContext("state.profile={short_code:'example',display_name:'member'};state.referrals={policy:currentReferralPolicy,count:0,totalMicros:0,carryMicros:0};render();",context);
- assert.match(get('referral-info').textContent,/USD 0\.01 per approved email task/);
+ assert.match(get('referral-info').textContent,/\$0\.01 per approved email task/);
+ assert.match(get('referral-stats').textContent,/Total rewards: \$0\.00/);
+ assert.doesNotMatch(get('referral-stats').textContent,/Fractional remainder|\.\d{6}/);
  assert.match(get('referral-info').textContent,/including after their first 30 days/);
  assert.match(get('referral-info').textContent,/72-hour hold and final moderation approval/);
  assert.doesNotMatch(get('referral-info').textContent,/Google|UGX 300|UGX 20/);

@@ -1,4 +1,7 @@
 import {contactRoute,notificationTick} from './contact-notifications.js';
+import {catalogRoute,catalogState} from './task-catalog.js';
+import {qualificationsRoute,enrichQualifications} from './qualifications-postgres.js';
+import {adminFinanceSnapshot} from './admin-finances-postgres.js';
 import './config.js';
 import { hash, verify } from './auth.js';
 import { profileRoute } from './profile-postgres.js';
@@ -219,6 +222,16 @@ const server = http.createServer(
           '/app.js': 'app.js',
           '/style.css': 'style.css',
           '/dashboard-v2.css': 'dashboard-v2.css',
+          '/marketplace.css': 'marketplace.css',
+          '/marketplace.js': 'marketplace.js',
+          '/theme.js': 'theme.js',
+          '/theme.css': 'theme.css',
+          '/workspaces.css': 'workspaces.css',
+          '/workspaces.js': 'workspaces.js',
+          '/admin-finances.js': 'admin-finances.js',
+          '/qualifications.js': 'qualifications.js',
+          '/qualifications.css': 'qualifications.css',
+          '/admin-finances.css': 'admin-finances.css',
           '/contact-v3.css': 'contact-v3.css',
           '/payouts': 'payouts.html',
           '/payouts/': 'payouts.html',
@@ -263,9 +276,12 @@ const server = http.createServer(
       // production cookies to Catalyst's preview hostname or unrelated domains.
       const requestHost = (req.headers.host || '').split(':')[0].toLowerCase();
       const sharedSite = requestHost === 'taskharbor.cc.cd' || requestHost === 'www.taskharbor.cc.cd';
-      const cookieDomain = sharedSite ? '; Domain=taskharbor.cc.cd' : '';
+      // A host-only session cookie always survives navigation within the
+      // current hostname, even if a browser rejects a Domain attribute.
+      // Keep a separately named shared cookie for apex/www transitions.
       const cookieSecure = sharedSite || publicOrigin?.startsWith('https:') ? '; Secure' : '';
-      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieDomain + cookieSecure;
+      const cookieOptions = '; HttpOnly; SameSite=Lax; Path=/' + cookieSecure;
+      const sharedCookieOptions = sharedSite ? cookieOptions + '; Domain=taskharbor.cc.cd' : null;
 
       const allowedOrigins = new Set([
         `http://${req.headers.host}`,
@@ -311,7 +327,7 @@ const server = http.createServer(
       // Accept the first *valid* token rather than assuming the first
       // cookie is current. Limit candidates to bound database queries.
       const cookieTokens = [...(req.headers.cookie || '')
-        .matchAll(/(?:^|;\s*)session=([a-f0-9]{64})(?=;|$)/g)]
+        .matchAll(/(?:^|;\s*)(?:session|session_shared)=([a-f0-9]{64})(?=;|$)/g)]
         .slice(0, 5)
         .map(m => m[1]);
       let token = '';
@@ -479,10 +495,15 @@ const server = http.createServer(
             86400000
         );
 
-        res.setHeader(
-          'Set-Cookie',
+        const loginCookies = [
           `session=${sessionToken}${cookieOptions}; Max-Age=86400`
-        );
+        ];
+        if (sharedCookieOptions) {
+          loginCookies.push(
+            `session_shared=${sessionToken}${sharedCookieOptions}; Max-Age=86400`
+          );
+        }
+        res.setHeader('Set-Cookie', loginCookies);
 
         result = { ok: true };
       } else {
@@ -599,6 +620,26 @@ const server = http.createServer(
           return;
         }
 
+        if (path === '/api/admin-finances') {
+          if (req.method !== 'GET') fail('Method not allowed', 405);
+          const params = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
+          const financeData = await adminFinanceSnapshot(db, user, params);
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(financeData));
+        }
+
+        const qualificationResult = await qualificationsRoute(db,user,path,body,req.method);
+        if(qualificationResult !== null){
+          if(req.method==='POST')broadcast();
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(qualificationResult));
+        }
+        const catalogResult = await catalogRoute(db,user,path,body,req.method);
+        if(catalogResult !== null){
+          broadcast();
+          res.setHeader('Content-Type','application/json');
+          return res.end(JSON.stringify(catalogResult));
+        }
         const contactResult = await contactRoute(db,user,path,req.method==='GET'?Object.fromEntries(new URL(req.url,'http://localhost').searchParams):body,req.method);
         if(contactResult!==null){
           if(req.method==='POST')broadcast();
@@ -739,10 +780,18 @@ const server = http.createServer(
               );
             }
 
-            res.setHeader(
-              'Set-Cookie',
+            const logoutCookies = [
               `session=${cookieOptions}; Max-Age=0`
-            );
+            ];
+            if (sharedCookieOptions) {
+              // Remove both new cookies and the legacy Domain=session
+              // cookie so old tokens cannot shadow subsequent logins.
+              logoutCookies.push(
+                `session=${sharedCookieOptions}; Max-Age=0`,
+                `session_shared=${sharedCookieOptions}; Max-Age=0`
+              );
+            }
+            res.setHeader('Set-Cookie', logoutCookies);
           } else if (
             path === '/api/claim'
           ) {
@@ -877,12 +926,7 @@ const server = http.createServer(
       if (
         path === '/api/state'
       ) {
-        result =
-          await enrich(
-            db,
-            user,
-            result
-          );
+        result = await enrichQualifications(db,user, await catalogState(db, await enrich(db,user,result)));
       }
 
       if (

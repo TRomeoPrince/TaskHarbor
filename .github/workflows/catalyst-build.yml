@@ -1,7 +1,7 @@
 name: Catalyst deployment package
 on:
   push:
-    branches: [feature/catalyst-task-workflows, feature/contact-notifications]
+    branches: [feature/catalyst-task-workflows, feature/contact-notifications, feature/taskharbor-marketplace-20261116]
   pull_request:
     branches: [catalyst-neon-staging, feature/catalyst-task-workflows]
   workflow_dispatch:

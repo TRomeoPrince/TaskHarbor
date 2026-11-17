@@ -1,6 +1,7 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="/theme.js"></script>
 <title>TaskHarbor — Small tasks. Clear progress.</title>
 <meta name="description" content="Find online tasks, follow clear instructions, and track your rewards.">
 <meta property="og:title" content="TaskHarbor — Small tasks. Clear progress.">
@@ -19,6 +20,11 @@
 <meta name="twitter:image" content="https://taskharbor.cc.cd/preview.png?v=4">
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/dashboard-v2.css">
+<link rel="stylesheet" href="/marketplace.css">
+<link rel="stylesheet" href="/workspaces.css">
+<link rel="stylesheet" href="/admin-finances.css">
+<link rel="stylesheet" href="/qualifications.css">
+<link rel="stylesheet" href="/theme.css">
 </head><body><header class="site-header"><a class="brand" href="/">TaskHarbor<span class="brand-dot">.</span></a><nav aria-label="Main navigation" id="main-nav" hidden><a href="/dashboard" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a><a href="/payouts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M7 14h4"/></svg><span>Payouts</span></a><a href="/profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>My profile</span></a><a href="/contact">Contact &amp; alerts</a></nav><nav id="guest-nav" aria-label="Welcome navigation"><a class="how-link" href="#how-it-works">How it works</a><a href="#sign-in">Sign in</a><a class="guest-signup" href="#sign-up">Sign up <span aria-hidden="true"><svg class="welcome-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></a><a href="/contact">Contact &amp; alerts</a></nav><span id="identity" hidden>Work, tracked clearly.</span><button id="logout" hidden>Log out</button></header><main><div id="notice" role="status"></div><section id="landing" aria-labelledby="welcome-title">
   <div class="welcome-hero">
     <div class="hero-copy">
@@ -61,6 +67,10 @@
 </div>
 <div class="workspace-tools"><div class="rate-notes"><p id="rate-info" class="muted"></p><p class="muted"><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Currency estimates by Exchange Rate API</a></p></div><label for="currency">Display currency <select id="currency"></select></label></div>
 <div class="wallet-panel-title"><h2>Your earnings</h2><p>Real account balances · USD ledger</p></div><div id="balances" class="cards"></div><p class="wallet-policy">Only available balances can be requested for withdrawal. Pending and held funds remain subject to review and any applicable moderation periods.</p>
+<section id="marketplace-intro" aria-label="Worker overview" hidden>
+<div><p class="market-kicker">YOUR WORKSPACE</p><h2>Find meaningful work. Follow every step.</h2><p id="marketplace-welcome" aria-live="polite">See new work, return to active tasks, and track review decisions.</p></div><a class="market-primary" href="#tasks-section">Explore work</a></section>
+<div id="marketplace-summary" aria-label="Work status overview" hidden></div>
+<p id="marketplace-attention" role="status" hidden></p>
 <section id="admin-overview" class="admin-overview" hidden aria-label="Administration overview">
  <div class="admin-heading"><div><p class="eyebrow">ADMINISTRATOR WORKSPACE</p><h2>Operations overview</h2><p>Live platform activity, review queues and publisher controls.</p></div><a href="/contact" class="admin-support-link">Member support ↗</a></div>
  <div class="admin-stats">
@@ -69,8 +79,104 @@
   <div><span>Withdrawal requests</span><strong id="admin-withdrawal-count">0</strong><small>Awaiting manual processing</small></div>
  </div>
  <nav class="admin-shortcuts" aria-label="Admin workspace shortcuts">
-  <a href="#admin">Create &amp; import</a><a href="#tasks-section">Task registry</a><a href="#submissions-section">Review submissions</a><a href="#withdrawals-section">Withdrawals</a><a href="/contact">Support center</a>
+  <a href="#admin">Create &amp; import</a><a href="#tasks-section">Task registry</a><a href="#submissions-section">Review submissions</a><a href="#withdrawals-section">Payout requests</a><a href="#admin-finances">Member balances</a><a href="/contact">Support center</a>
  </nav>
  </section>
-<section id="referral-box" class="row"><h2>Invite friends</h2><p id="referral-info"></p><label>Your referral link<div class="link-copy"><input id="referral-link" readonly><button type="button" data-copy-target="referral-link">Copy link</button></div></label><p id="referral-stats"></p></section><section id="admin" hidden class="admin-zone"><div class="admin-section-heading"><p class="eyebrow">PUBLISHER WORKSPACE</p><h2>Manage work opportunities</h2><p>Create and import new opportunities for your workers. Every reward remains subject to approval.</p></div><details class="admin-legacy-workflow"><summary>Specialized email task publishing</summary><section class="row"><p class="eyebrow">LEGACY TASK TYPE</p><h2>Create email task</h2><p>Publish an available Gmail slot without account credentials. After a member claims, request fresh details from the Telegram source, then release them privately. Their work timer starts upon release.</p><p>Fixed reward: <strong>USD 0.12</strong> · Birth date: <strong>19 May 2000</strong>. Follow-up steps are included automatically.</p><form id="quick-create"><input type="hidden" name="onDemand" value="1"><label>Worker time after account details are released (minutes)<input name="workMinutes" type="number" min="1" max="43200" value="60" required></label><button id="quick-publish">Publish available Gmail slot</button><p id="quick-result" role="status"></p></form></section></details><h2>Create work</h2><form id="create"><input name="title" placeholder="Task title" required maxlength="200"><textarea name="description" placeholder="Instructions and acceptance criteria" required></textarea><label>Reward (USD)<input name="rewardAmount" type="number" min="0.01" step="0.01" placeholder="5.00" required></label><label>Claim time (minutes; leave blank for no automatic expiry)<input name="claimMinutes" type="number" min="1" max="43200" value="30"></label><label>Final project deadline (optional, local time)<input name="deadlineAt" type="datetime-local"></label><label><input name="publicDescription" type="checkbox"> Show description before claiming (never include private credentials)</label><h3>Private task data</h3><div id="field-editor"></div><button id="add-field" type="button" class="secondary">Add data field</button><h3>Follow-up steps after submission</h3><p>Step titles are shown before claiming. Instructions appear one step at a time after submission. Leave instructions blank if you will receive the value later; provide it from the task card after the worker submits.</p><div id="step-editor"></div><button id="add-step" type="button" class="secondary">Add follow-up step</button><label>Instruction images (up to 6, PNG/JPEG/WebP, 3 MB each)<input id="task-images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label><button>Create task</button></form><details><summary>Import tasks from JSON</summary><p>Array of {title, description, rewardAmount, provider, externalId}. rewardAmount is a USD amount such as &quot;2.50&quot;; provider + externalId must be unique. Optional task policy: {startMode, claimMinutes, deadlineAt, publicDescription, expiryAction}. Fields and follow-up steps are also supported.</p><form id="import"><label>Choose an exported JSON file<input id="import-file" type="file" accept=".json,application/json"></label><textarea name="tasks" placeholder='[{"title":"Check a product description","description":"Report spelling mistakes","rewardAmount":"2.50","provider":"sample","externalId":"001"}]' required></textarea><button>Import tasks</button></form></details><h2>Automatic exchange rates</h2><p id="exchange-status" role="status"></p><p>Local currencies are estimated views. Rewards and payments remain in USD.</p><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a></section><section class="workspace-section" id="tasks-section"><div class="section-heading"><div><h2>Find work</h2><p>Open a task to read its instructions before claiming.</p></div><label for="task-filter">Show <select id="task-filter"><option value="all">All tasks</option><option value="available">Available</option><option value="claimed">In progress</option><option value="submitted">Submitted</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label></div><div id="tasks" class="grid"></div></section><section class="workspace-section" id="submissions-section"><h2>Submissions</h2><div id="submissions"></div></section><section id="withdrawBox" class="workspace-section"><h2>Request withdrawal</h2><p class="row" id="uganda-payout-policy">For Ugandan networks, the minimum mobile money payout is UGX 1,000. Smaller payouts are delivered as airtime.</p><form id="withdraw"><label id="withdraw-label" for="withdraw-amount">Amount</label><input id="withdraw-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="5.00" required><p id="withdraw-limit" class="muted"></p><p id="withdraw-error" role="alert"></p><p class="muted" id="withdraw-unit-hint">Enter an amount in the selected currency. To enter dollars, select USD.</p><input name="destination" placeholder="Payment destination / account details" required maxlength="500"><button>Preview withdrawal</button></form><p class="muted">Requests reserve USD immediately. Payments are processed manually in USD; local amounts are estimates.</p></section><section class="workspace-section" id="withdrawals-section"><h2>Withdrawals & payouts</h2><div id="withdrawals"></div></section><section class="workspace-section" id="transactions-section"><h2>Transaction history</h2><div id="transactions"></div></section></section></main><script src="/app.js"></script></body></html>
+<section class="workspace-section admin-finances" id="admin-finances" hidden aria-label="Member financial balances">
+ <div class="section-heading">
+  <div><p class="eyebrow">ADMIN ONLY · FINANCIAL OVERSIGHT</p><h2>Member balances</h2>
+   <p>Actual ledger balances and unreleased task rewards for individual workers, in USD.</p></div>
+ </div>
+ <form id="admin-finances-search" class="admin-finances-search">
+  <label for="admin-finances-query">Find member by email or username
+   <input id="admin-finances-query" name="search" type="search" maxlength="80" autocomplete="off" placeholder="Search member"></label>
+  <button type="submit" class="secondary">Search</button>
+  <button id="admin-finances-refresh" type="button" class="secondary">Refresh balances</button>
+ </form>
+ <p id="admin-finances-status" role="status" aria-live="polite">Balances load for administrators only.</p>
+ <div class="admin-finances-scroll" tabindex="0" aria-label="Scrollable member balances">
+  <table class="admin-finances-table">
+   <thead><tr><th scope="col">Member</th><th scope="col">Available</th><th scope="col">Pending review</th><th scope="col">Held</th><th scope="col">Lifetime earned</th><th scope="col">Withdrawn</th><th scope="col">Requested</th></tr></thead>
+   <tbody id="admin-finances-rows"></tbody>
+  </table>
+ </div>
+ <div class="admin-finances-pager">
+  <button id="admin-finances-prev" type="button" class="secondary" disabled>Previous</button>
+  <span id="admin-finances-page" aria-live="polite"></span>
+  <button id="admin-finances-next" type="button" class="secondary" disabled>Next</button>
+ </div>
+ <p class="admin-finances-help">Requested amounts are already reserved from the available balance. Pending review and held amounts cannot be withdrawn. Balances update from existing financial records; this panel does not move money.</p>
+</section>
+<section id="referral-box" class="row"><h2>Invite friends</h2><p id="referral-info"></p><label>Your referral link<div class="link-copy"><input id="referral-link" readonly><button type="button" data-copy-target="referral-link">Copy link</button></div></label><p id="referral-stats"></p></section><section id="admin" hidden class="admin-zone"><div class="admin-section-heading"><p class="eyebrow">PUBLISHER WORKSPACE</p><h2>Manage work opportunities</h2><p>Create and import new opportunities for your workers. Every reward remains subject to approval.</p></div><details class="admin-legacy-workflow"><summary>Specialized email task publishing</summary><section class="row"><p class="eyebrow">LEGACY TASK TYPE</p><h2>Create email task</h2><p>Publish an available Gmail slot without account credentials. After a member claims, request fresh details from the Telegram source, then release them privately. Their work timer starts upon release.</p><p>Fixed reward: <strong>USD 0.12</strong> · Birth date: <strong>19 May 2000</strong>. Follow-up steps are included automatically.</p><form id="quick-create"><input type="hidden" name="onDemand" value="1"><label>Worker time after account details are released (minutes)<input name="workMinutes" type="number" min="1" max="43200" value="60" required></label><button id="quick-publish">Publish available Gmail slot</button><p id="quick-result" role="status"></p></form></section></details><details id="admin-qualification-tools" class="market-admin-catalog">
+ <summary>Worker qualifications and task eligibility</summary>
+ <p>These restrictions are enforced by the server. Grant verified skills only after the worker has completed an approved assessment or review. Worker accounts cannot grant themselves qualifications.</p>
+ <form id="qualification-requirement-form">
+  <h3>Require a qualification for a task</h3>
+  <label>Published task<select name="taskId" id="qualification-task" required></select></label>
+  <label>Skill<select name="skill" required>
+   <option value="ai_evaluation">AI evaluation</option><option value="transcription">Transcription</option>
+   <option value="annotation">Data annotation</option><option value="research">Research</option>
+   <option value="software">Software engineering</option><option value="design">Design</option>
+   <option value="data_entry">Data entry</option></select></label>
+  <label>Minimum verified level<select name="minimumLevel">
+   <option value="beginner">Beginner</option><option value="intermediate">Intermediate</option>
+   <option value="advanced">Advanced</option></select></label>
+  <button type="submit">Save task requirement</button>
+ </form>
+ <form id="qualification-grant-form">
+  <h3>Grant a verified qualification</h3>
+  <label>Worker email<input name="workerEmail" type="email" maxlength="254" autocomplete="off" required placeholder="worker@example.com"></label>
+  <label>Verified skill<select name="skill" required>
+   <option value="ai_evaluation">AI evaluation</option><option value="transcription">Transcription</option>
+   <option value="annotation">Data annotation</option><option value="research">Research</option>
+   <option value="software">Software engineering</option><option value="design">Design</option>
+   <option value="data_entry">Data entry</option></select></label>
+  <label>Verified level<select name="level">
+   <option value="beginner">Beginner</option><option value="intermediate">Intermediate</option>
+   <option value="advanced">Advanced</option></select></label>
+  <button type="submit">Grant verified skill</button>
+ </form>
+ <p id="qualification-admin-status" role="status" aria-live="polite"></p>
+</details>
+<details class="market-admin-catalog"><summary>Classify published tasks</summary>
+<p>Label actual jobs only. Public summary is visible to workers before claiming; do not include credentials or private customer data.</p>
+<form id="market-admin-edit">
+<label for="market-edit-task">Published task<select id="market-edit-task" name="taskId" required></select></label>
+<label for="market-edit-category">Work category<select id="market-edit-category" name="category">
+<option value="general">General</option><option value="microtask">Microtasks</option><option value="survey">Surveys & offers</option><option value="ai">AI evaluation</option><option value="transcription">Transcription</option><option value="annotation">Data annotation</option><option value="project">Skilled projects</option>
+</select></label>
+<label for="market-edit-unit">Reward is per accepted<select id="market-edit-unit" name="rewardUnit">
+<option value="task">Task</option><option value="item">Item</option><option value="batch">Batch</option><option value="clip">Clip</option><option value="recorded_minute">Recorded minute</option><option value="milestone">Milestone</option>
+</select></label>
+<label for="market-edit-level">Skill level<select id="market-edit-level" name="skillLevel">
+<option value="any">Any</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option>
+</select></label>
+<label for="market-edit-minutes">Estimated duration in minutes (optional)<input id="market-edit-minutes" name="expectedMinutes" type="number" min="1" max="43200" placeholder="Unknown"></label>
+<label for="market-edit-summary">Public task summary<textarea id="market-edit-summary" name="publicSummary" rows="2" maxlength="300" placeholder="Describe the outcome and requirements without private instructions"></textarea></label>
+<button type="submit">Save category and details</button><p id="market-edit-status" role="status" aria-live="polite"></p>
+</form></details>
+<h2>Create work</h2><form id="create"><input name="title" placeholder="Task title" required maxlength="200"><textarea name="description" placeholder="Instructions and acceptance criteria" required></textarea><label>Reward (USD)<input name="rewardAmount" type="number" min="0.01" step="0.01" placeholder="5.00" required></label><label>Claim time (minutes; leave blank for no automatic expiry)<input name="claimMinutes" type="number" min="1" max="43200" value="30"></label><label>Final project deadline (optional, local time)<input name="deadlineAt" type="datetime-local"></label><label><input name="publicDescription" type="checkbox"> Show description before claiming (never include private credentials)</label><h3>Private task data</h3><div id="field-editor"></div><button id="add-field" type="button" class="secondary">Add data field</button><h3>Follow-up steps after submission</h3><p>Step titles are shown before claiming. Instructions appear one step at a time after submission. Leave instructions blank if you will receive the value later; provide it from the task card after the worker submits.</p><div id="step-editor"></div><button id="add-step" type="button" class="secondary">Add follow-up step</button><label>Instruction images (up to 6, PNG/JPEG/WebP, 3 MB each)<input id="task-images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label><button>Create task</button></form><details><summary>Import tasks from JSON</summary><p>Array of {title, description, rewardAmount, provider, externalId}. rewardAmount is a USD amount such as &quot;2.50&quot;; provider + externalId must be unique. Optional task policy: {startMode, claimMinutes, deadlineAt, publicDescription, expiryAction}. Fields and follow-up steps are also supported.</p><form id="import"><label>Choose an exported JSON file<input id="import-file" type="file" accept=".json,application/json"></label><textarea name="tasks" placeholder='[{"title":"Check a product description","description":"Report spelling mistakes","rewardAmount":"2.50","provider":"sample","externalId":"001"}]' required></textarea><button>Import tasks</button></form></details><h2>Automatic exchange rates</h2><p id="exchange-status" role="status"></p><p>Local currencies are estimated views. Rewards and payments remain in USD.</p><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a></section><section class="workspace-section" id="tasks-section"><div class="section-heading"><div><h2>Find work</h2><p>Open a task to read its instructions before claiming.</p></div><label for="task-filter">Show <select id="task-filter"><option value="all">All tasks</option><option value="available">Available</option><option value="claimed">In progress</option><option value="submitted">Submitted</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label></div><nav id="market-view-switch" aria-label="Work views">
+  <button type="button" data-market-view="discover" aria-pressed="true">Find Work</button>
+  <button type="button" data-market-view="mine" aria-pressed="false">My Tasks</button>
+ </nav>
+ <div id="market-controls" aria-label="Filter work opportunities">
+ <label for="market-search">Search tasks<input id="market-search" type="search" maxlength="100" placeholder="Title, provider or category" autocomplete="off"></label>
+ <label for="market-category">Category<select id="market-category">
+ <option value="all">All categories</option><option value="microtask">Microtasks</option><option value="survey">Surveys &amp; offers</option><option value="ai">AI evaluation</option><option value="transcription">Transcription</option><option value="annotation">Data annotation</option><option value="project">Skilled projects</option><option value="general">General</option>
+ </select></label>
+ <label for="market-minimum">Minimum reward (USD)<input id="market-minimum" type="number" min="0" step="0.01" placeholder="Any amount"></label>
+ <label for="market-sort">Sort by<select id="market-sort"><option value="newest">Latest</option><option value="reward-high">Highest reward</option><option value="reward-low">Lowest reward</option><option value="title">Title A–Z</option></select></label>
+ <button id="market-clear" type="button" class="secondary">Clear</button>
+ </div><div class="market-results-row"><span id="market-results" role="status" aria-live="polite"></span><span>Rewards require approval</span></div><div id="tasks" class="grid"></div><p id="market-empty" hidden>No matching tasks. Try another category or clear your filters.</p></section><section class="workspace-section" id="submissions-section"><h2>Submissions</h2><div id="submissions"></div></section><section id="withdrawBox" class="workspace-section"><h2>Request withdrawal</h2><p class="row" id="uganda-payout-policy">For Ugandan networks, the minimum mobile money payout is UGX 1,000. Smaller payouts are delivered as airtime.</p><form id="withdraw"><label id="withdraw-label" for="withdraw-amount">Amount</label><input id="withdraw-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="5.00" required><p id="withdraw-limit" class="muted"></p><p id="withdraw-error" role="alert"></p><p class="muted" id="withdraw-unit-hint">Enter an amount in the selected currency. To enter dollars, select USD.</p><input name="destination" placeholder="Payment destination / account details" required maxlength="500"><button>Preview withdrawal</button></form><p class="muted">Requests reserve USD immediately. Payments are processed manually in USD; local amounts are estimates.</p></section><section class="workspace-section" id="withdrawals-section">
+ <div class="section-heading"><div><h2>Withdrawals &amp; payouts</h2><p id="withdrawals-count" role="status">Your payout requests</p></div>
+ <label id="withdrawal-filter-wrap" for="withdrawal-filter" hidden>Show requests
+  <select id="withdrawal-filter"><option value="requested">Requested (unpaid)</option><option value="all">All</option><option value="paid">Paid</option><option value="rejected">Rejected / refunded</option></select>
+ </label></div><div id="withdrawals"></div>
+</section><section class="workspace-section" id="transactions-section"><h2>Transaction history</h2><div id="transactions"></div></section></section><nav id="mobile-work-nav" aria-label="Mobile worker navigation" hidden>
+ <a href="/dashboard"><span aria-hidden="true">⌂</span>Home</a>
+ <a href="#tasks-section" data-market-view-link="discover"><span aria-hidden="true">⌕</span>Find work</a>
+ <a href="#tasks-section" data-market-view-link="mine"><span aria-hidden="true">▤</span>My tasks</a>
+ <a href="#withdrawals-section"><span aria-hidden="true">▣</span>Earnings</a>
+ <a href="/profile"><span aria-hidden="true">☷</span>Profile</a>
+ </nav></main><script src="/marketplace.js"></script><script src="/workspaces.js"></script><script src="/admin-finances.js"></script><script src="/qualifications.js"></script><script src="/app.js"></script></body></html>
 

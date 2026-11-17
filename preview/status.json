@@ -1,0 +1,85 @@
+{
+  "title": "TaskHarbor Development Tracker",
+  "summary": "Synthetic live preview of the evolving GitHub feature branch. A feature is complete only after unit and browser acceptance tests.",
+  "repository": "https://github.com/TRomeoPrince/TaskHarbor",
+  "pullRequest": "https://github.com/TRomeoPrince/TaskHarbor/pull/9",
+  "roadmap": "https://github.com/TRomeoPrince/TaskHarbor/blob/main/TaskHarborplan.md",
+  "tests": [
+    {
+      "name": "PostgreSQL, API and unit tests",
+      "url": "https://github.com/TRomeoPrince/TaskHarbor/actions/workflows/catalyst-task-workflows.yml"
+    },
+    {
+      "name": "Browser visual lab",
+      "url": "https://github.com/TRomeoPrince/TaskHarbor/actions/workflows/taskharbor-theme-visual-lab.yml"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "Public temporary preview website",
+      "status": "verified",
+      "detail": "Railway preview service; real browser worker/admin/finance/theme/business tests; per-session synthetic data; automatic source-branch redeploys"
+    },
+    {
+      "name": "Nine creative themes",
+      "status": "verified",
+      "detail": "Nine creative palettes and interactive Theme Studio; persisted selection, cross-page appearance, desktop/mobile Chromium screenshots, body/button contrast checks; original Light and Dark preserved"
+    },
+    {
+      "name": "Find Work vs My Tasks",
+      "status": "verified",
+      "detail": "Role-scoped cards, filters, completed browser checks"
+    },
+    {
+      "name": "Admin payouts & member balances",
+      "status": "verified-in-code",
+      "detail": "Read-only aggregate SQL, role checks, synthetic DB tests"
+    },
+    {
+      "name": "Structured submission forms",
+      "status": "partial",
+      "detail": "AI, transcription, annotation and project evidence forms; specialist tools still absent"
+    },
+    {
+      "name": "Multi-worker project slots",
+      "status": "not-started",
+      "detail": "Existing tasks single-assignment; needs capacity and work unit accounting"
+    },
+    {
+      "name": "Worker qualifications",
+      "status": "partial",
+      "detail": "PostgreSQL verified skill grants, task requirements, transaction-safe claim checks, browser lock/unlock demo; assessments remain"
+    },
+    {
+      "name": "Transcription player & annotation canvas",
+      "status": "not-started",
+      "detail": "Real workspaces, media privacy, autosave and review QA"
+    },
+    {
+      "name": "Client/business portal",
+      "status": "partial",
+      "detail": "Interactive synthetic project creation, unit pricing, estimated budget and review request; real client identity, funding, allocation and billing remain"
+    },
+    {
+      "name": "Authorized external partners",
+      "status": "blocked",
+      "detail": "Requires partner acceptance, callback verification and reconciliation"
+    },
+    {
+      "name": "Production release",
+      "status": "blocked",
+      "detail": "Backups, AppSail revision verification, staging security tests and approved migration"
+    }
+  ],
+  "notes": [
+    "The preview intentionally uses synthetic worker accounts, sample tasks and sample balances only.",
+    "Actions here cannot trigger a real withdrawal, worker payout, third-party integration or database write.",
+    "GitHub pushes to the preview source branch trigger preview redeployments when Railway deployment is connected.",
+    "Preview includes a sample Business workspace showing project economics but never collects real payments or publishes work units.",
+    "Theme Studio is accessible from the top preview toolbar at /themes; custom palettes affect appearance only and do not change task or payout logic."
+  ],
+  "previewUrl": "https://taskharbor-demo-preview.up.railway.app/dashboard",
+  "businessPreviewUrl": "https://taskharbor-demo-preview.up.railway.app/business",
+  "trackerUrl": "https://taskharbor-demo-preview.up.railway.app/status",
+  "themeStudioUrl": "https://taskharbor-demo-preview.up.railway.app/themes"
+}

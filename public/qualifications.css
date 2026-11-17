@@ -1,0 +1,18 @@
+.qualification-required{border:1px solid #edb67e;background:#fff7e9;color:#80531c;
+  border-radius:11px;padding:13px 16px;font-size:13px;line-height:1.55;font-weight:650}
+#admin-qualification-tools form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+ max-width:770px;margin:18px 0;border-top:1px solid #d9e5dc;padding-top:15px}
+#admin-qualification-tools form h3{grid-column:1/-1;margin:0;font-size:16px}
+#admin-qualification-tools form label{display:grid;gap:6px;margin:0;font-size:12px}
+#admin-qualification-tools form input,#admin-qualification-tools form select{
+ width:100%;margin:0;padding:10px;box-sizing:border-box}
+#admin-qualification-tools form button{justify-self:start;align-self:end}
+#qualification-admin-status{font-size:13px;line-height:1.5}
+html[data-theme="dark"] .qualification-required{border-color:#8e693d;
+ background:var(--theme-warning-bg);color:var(--theme-warning-ink)}
+html[data-theme="dark"] #admin-qualification-tools form{border-color:var(--theme-border)}
+html[data-theme="dark"] #admin-qualification-tools form input,
+html[data-theme="dark"] #admin-qualification-tools form select{
+ background:var(--theme-surface-alt);color:var(--theme-ink);border-color:var(--theme-border)}
+@media(max-width:620px){#admin-qualification-tools form{grid-template-columns:1fr}
+ #admin-qualification-tools form h3{grid-column:auto}}

@@ -1,0 +1,21 @@
+/* Visible on every temporary preview page. */
+:root{--preview-height:56px}
+body{padding-top:var(--preview-height)!important}
+.th-preview-toolbar{position:fixed!important;inset:0 0 auto 0;z-index:9999;min-height:var(--preview-height);
+ display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:9px 23px;box-sizing:border-box;
+ border-bottom:1px solid #6fa889;background:#102c23;color:#effbf4;font:600 12px/1.4 Inter,system-ui,sans-serif;
+ box-shadow:0 6px 20px #00180b33}
+.th-preview-mark{font-weight:800;letter-spacing:.09em;color:#aeffcb}
+.th-preview-explain{font-weight:450;color:#c5e2d1}
+.th-preview-links{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.th-preview-links a{display:inline-flex;min-height:34px;align-items:center;padding:7px 12px;border-radius:8px;
+ text-decoration:none!important;background:#244737;color:#effbf4!important;border:1px solid #547e62;font-size:12px}
+.th-preview-links a:hover,.th-preview-links a[aria-current="page"]{background:#d2f3dd;color:#143e29!important}
+.th-preview-links a:focus-visible{outline:3px solid #c8efb8;outline-offset:2px}
+.th-preview-mode .site-header{top:var(--preview-height)!important}
+@media(max-width:870px){:root{--preview-height:97px}.th-preview-toolbar{padding:8px 13px;gap:7px}
+.th-preview-links{width:100%;justify-content:space-between;margin-left:0}
+.th-preview-links a{padding:5px 8px;font-size:11px}.th-preview-explain{font-size:11px}}
+@media(max-width:430px){:root{--preview-height:131px}
+.th-preview-explain{flex-basis:100%}.th-preview-links{gap:3px}
+.th-preview-links a{font-size:10px;padding:5px 6px}}

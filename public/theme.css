@@ -1,0 +1,600 @@
+/* Shared appearance layer (loaded last): one token contract for all current/future themes.
+   Keep selector specificity explicit because the legacy styles use literal colors. */
+:root {
+  color-scheme:light;
+  --theme-bg:#f6f8f5;
+  --theme-surface:#fff;
+  --theme-surface-alt:#f5faf6;
+  --theme-panel:#edf6ef;
+  --theme-ink:#183c32;
+  --theme-text-soft:#506f5d;
+  --theme-text-muted:#647e70;
+  --theme-border:#dce8df;
+  --theme-accent:#176f56;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#e5f4ec;
+  --theme-warning-bg:#fff7e6;
+  --theme-warning-ink:#855e20;
+  --theme-link:#1c7553;
+  --theme-shadow:0 10px 34px rgba(21,57,39,.055);
+}
+html[data-theme]:not([data-theme="light"]) {
+  color-scheme:dark;
+  --theme-bg:#0e1916;
+  --theme-surface:#192b24;
+  --theme-surface-alt:#21362c;
+  --theme-panel:#263d31;
+  --theme-ink:#ebf7ef;
+  --theme-text-soft:#c3d8ca;
+  --theme-text-muted:#abc6b6;
+  --theme-border:#365448;
+  --theme-accent:#74d4a8;
+  --theme-accent-contrast:#10221a;
+  --theme-badge-bg:#254638;
+  --theme-warning-bg:#4e3823;
+  --theme-warning-ink:#ffe0ab;
+  --theme-link:#99e8bf;
+  --theme-shadow:0 10px 34px rgba(0,0,0,.22);
+  --th-ink:var(--theme-ink);
+  --th-ink-soft:var(--theme-text-soft);
+  --th-green:var(--theme-accent);
+  --th-mint:var(--theme-panel);
+  --th-cream:var(--theme-bg);
+  --th-border:var(--theme-border);
+  --th-gold:#e9c38b;
+  --th-shadow:var(--theme-shadow);
+  --market-forest:var(--theme-accent);
+  --market-mint:var(--theme-badge-bg);
+  --market-ink:var(--theme-ink);
+  --market-line:var(--theme-border);
+}
+.theme-switcher {
+  align-self:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:0 0 0 auto;
+  padding:0;
+  font-size:12px;
+  font-weight:700;
+  color:var(--theme-text-soft);
+  white-space:nowrap;
+}
+.site-header .theme-switcher-label {color:inherit;margin:0}
+.theme-switcher select {
+  appearance:auto;
+  display:inline-block;
+  min-width:94px;
+  min-height:38px;
+  margin:0;
+  padding:7px 11px;
+  border:1px solid var(--theme-border);
+  border-radius:10px;
+  font:inherit;
+  background:var(--theme-surface);
+  color:var(--theme-ink);
+  cursor:pointer;
+}
+.theme-switcher select:focus-visible {outline:3px solid var(--theme-accent);outline-offset:2px}
+@media(max-width:760px) {
+  .site-header .theme-switcher {margin-left:auto}
+  body:has(#landing:not([hidden])) .site-header,
+  body:has(#auth:not([hidden])) .site-header {flex-wrap:wrap}
+  .site-header #guest-nav {flex-wrap:wrap;gap:12px}
+}
+@media(max-width:440px){
+  .theme-switcher-label {display:none}
+  .theme-switcher select {min-width:83px}
+}
+html[data-theme]:not([data-theme="light"]) body,
+html[data-theme]:not([data-theme="light"]) .support-page,
+html[data-theme]:not([data-theme="light"]) body:has(#landing:not([hidden])),
+html[data-theme]:not([data-theme="light"]) body:has(#auth:not([hidden])) {
+  background:var(--theme-bg);
+  color:var(--theme-ink);
+}
+html[data-theme]:not([data-theme="light"]) .site-header,
+html[data-theme]:not([data-theme="light"]) body:has(#landing:not([hidden])) .site-header,
+html[data-theme]:not([data-theme="light"]) body:has(#auth:not([hidden])) .site-header {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  box-shadow:0 5px 22px #0002;
+}
+html[data-theme]:not([data-theme="light"]) .brand,
+html[data-theme]:not([data-theme="light"]) .site-header .brand,
+html[data-theme]:not([data-theme="light"]) body:has(#landing:not([hidden])) .brand,
+html[data-theme]:not([data-theme="light"]) body:has(#auth:not([hidden])) .brand,
+html[data-theme]:not([data-theme="light"]) body:has(#workspace:not([hidden])) .brand,
+html[data-theme]:not([data-theme="light"]) h1,
+html[data-theme]:not([data-theme="light"]) h2,
+html[data-theme]:not([data-theme="light"]) h3,
+html[data-theme]:not([data-theme="light"]) h4 {
+  color:var(--theme-ink);
+}
+html[data-theme]:not([data-theme="light"]) .site-header nav a,
+html[data-theme]:not([data-theme="light"]) .site-header #guest-nav a,
+html[data-theme]:not([data-theme="light"]) .support-page .site-header nav a {
+  color:var(--theme-text-soft);
+}
+html[data-theme]:not([data-theme="light"]) .site-header nav a:hover,
+html[data-theme]:not([data-theme="light"]) .site-header nav a[aria-current=page],
+html[data-theme]:not([data-theme="light"]) .site-header #guest-nav a:hover,
+html[data-theme]:not([data-theme="light"]) .support-page .site-header nav a[aria-current="page"] {
+  background:var(--theme-panel);
+  color:var(--theme-accent);
+}
+html[data-theme]:not([data-theme="light"]) .site-header #guest-nav .guest-signup,
+html[data-theme]:not([data-theme="light"]) a.welcome-button,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-button,
+html[data-theme]:not([data-theme="light"]) .workspace-hero-links a:first-child,
+html[data-theme]:not([data-theme="light"]) #marketplace-intro .market-primary,
+html[data-theme]:not([data-theme="light"]) button:not(.secondary):not(.thread-row):not(.theme-button) {
+  background:var(--theme-accent);
+  color:var(--theme-accent-contrast);
+}
+html[data-theme]:not([data-theme="light"]) button.secondary,
+html[data-theme]:not([data-theme="light"]) body:has(#workspace:not([hidden])) #logout,
+html[data-theme]:not([data-theme="light"]) #market-controls button {
+  background:var(--theme-panel);
+  color:var(--theme-ink);
+  border:1px solid var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) a:not(.brand):not(.welcome-button):not(.market-primary):not(.market-stat) {color:var(--theme-link)}
+html[data-theme]:not([data-theme="light"]) .muted,
+html[data-theme]:not([data-theme="light"]) .id,
+html[data-theme]:not([data-theme="light"]) .site-header #identity,
+html[data-theme]:not([data-theme="light"]) .workspace-tools label,
+html[data-theme]:not([data-theme="light"]) .wallet-panel-title p,
+html[data-theme]:not([data-theme="light"]) #workspace .wallet-policy,
+html[data-theme]:not([data-theme="light"]) .workspace-section .section-heading p,
+html[data-theme]:not([data-theme="light"]) .eyebrow,
+html[data-theme]:not([data-theme="light"]) .form-hint {
+  color:var(--theme-text-muted);
+}
+html[data-theme]:not([data-theme="light"]) input,
+html[data-theme]:not([data-theme="light"]) textarea,
+html[data-theme]:not([data-theme="light"]) select,
+html[data-theme]:not([data-theme="light"]) .workspace-tools select,
+html[data-theme]:not([data-theme="light"]) .workspace-section .section-heading select,
+html[data-theme]:not([data-theme="light"]) #market-controls input,
+html[data-theme]:not([data-theme="light"]) #market-controls select,
+html[data-theme]:not([data-theme="light"]) .support-form input,
+html[data-theme]:not([data-theme="light"]) .support-form textarea,
+html[data-theme]:not([data-theme="light"]) #admin-finances-query,
+html[data-theme]:not([data-theme="light"]) #withdrawal-filter,
+html[data-theme]:not([data-theme="light"]) .work-field input,
+html[data-theme]:not([data-theme="light"]) .work-field select,
+html[data-theme]:not([data-theme="light"]) .work-field textarea {
+  background:var(--theme-surface-alt);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+}
+html[data-theme]:not([data-theme="light"]) input::placeholder,
+html[data-theme]:not([data-theme="light"]) textarea::placeholder {color:var(--theme-text-muted);opacity:1}
+html[data-theme]:not([data-theme="light"]) input:disabled,
+html[data-theme]:not([data-theme="light"]) button:disabled {opacity:.55}
+html[data-theme]:not([data-theme="light"]) .row,
+html[data-theme]:not([data-theme="light"]) .card,
+html[data-theme]:not([data-theme="light"]) article,
+html[data-theme]:not([data-theme="light"]) #balances .wallet-card,
+html[data-theme]:not([data-theme="light"]) #workspace #withdrawBox,
+html[data-theme]:not([data-theme="light"]) #tasks .task-listing,
+html[data-theme]:not([data-theme="light"]) #tasks .task-detail,
+html[data-theme]:not([data-theme="light"]) .support-card,
+html[data-theme]:not([data-theme="light"]) .work-dialog,
+html[data-theme]:not([data-theme="light"]) .admin-finances,
+html[data-theme]:not([data-theme="light"]) .market-admin-catalog,
+html[data-theme]:not([data-theme="light"]) .admin-overview,
+html[data-theme]:not([data-theme="light"]) #workspace #admin {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+  box-shadow:var(--theme-shadow);
+}
+html[data-theme]:not([data-theme="light"]) #balances .wallet-available,
+html[data-theme]:not([data-theme="light"]) #balances .wallet-pending,
+html[data-theme]:not([data-theme="light"]) .work-dialog,
+html[data-theme]:not([data-theme="light"]) .admin-overview,
+html[data-theme]:not([data-theme="light"]) #workspace #admin,
+html[data-theme]:not([data-theme="light"]) #workspace #withdrawBox {
+  background:var(--theme-surface);
+}
+html[data-theme]:not([data-theme="light"]) .badge,
+html[data-theme]:not([data-theme="light"]) #tasks .market-category-tag {
+  background:var(--theme-badge-bg);
+  border-color:var(--theme-border);
+  color:var(--theme-accent);
+}
+html[data-theme]:not([data-theme="light"]) .copy-field,
+html[data-theme]:not([data-theme="light"]) #tasks .task-detail .copy-field,
+html[data-theme]:not([data-theme="light"]) #tasks .task-detail .message,
+html[data-theme]:not([data-theme="light"]) .message,
+html[data-theme]:not([data-theme="light"]) .step,
+html[data-theme]:not([data-theme="light"]) .editor-row,
+html[data-theme]:not([data-theme="light"]) .action-panel,
+html[data-theme]:not([data-theme="light"]) .market-policy,
+html[data-theme]:not([data-theme="light"]) #tasks .market-policy,
+html[data-theme]:not([data-theme="light"]) .thread-row,
+html[data-theme]:not([data-theme="light"]) .empty-state,
+html[data-theme]:not([data-theme="light"]) .member-row,
+html[data-theme]:not([data-theme="light"]) .conversation-panel,
+html[data-theme]:not([data-theme="light"]) .message-stream article,
+html[data-theme]:not([data-theme="light"]) .support-card.compact-help {
+  background:var(--theme-surface-alt);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) #workspace #connection,
+html[data-theme]:not([data-theme="light"]) #tasks .task-open,
+html[data-theme]:not([data-theme="light"]) #tasks .task-category-icon,
+html[data-theme]:not([data-theme="light"]) #balances .wallet-card .wallet-icon,
+html[data-theme]:not([data-theme="light"]) .admin-shortcuts a,
+html[data-theme]:not([data-theme="light"]) .section-icon,
+html[data-theme]:not([data-theme="light"]) .thread-row .thread-status {
+  background:var(--theme-panel);
+  border-color:var(--theme-border);
+  color:var(--theme-accent);
+}
+html[data-theme]:not([data-theme="light"]) #tasks .task-summary:hover,
+html[data-theme]:not([data-theme="light"]) .thread-row:hover,
+html[data-theme]:not([data-theme="light"]) .admin-finances-table tbody tr:hover {
+  background:color-mix(in srgb,var(--theme-accent) 12%,var(--theme-surface));
+}
+html[data-theme]:not([data-theme="light"]) #tasks .task-title,
+html[data-theme]:not([data-theme="light"]) #tasks .task-reward,
+html[data-theme]:not([data-theme="light"]) #tasks .task-open,
+html[data-theme]:not([data-theme="light"]) #tasks .task-metadata,
+html[data-theme]:not([data-theme="light"]) #tasks .task-detail .task-detail-lead,
+html[data-theme]:not([data-theme="light"]) #tasks .market-policy,
+html[data-theme]:not([data-theme="light"]) #marketplace-summary .market-stat-label,
+html[data-theme]:not([data-theme="light"]) #marketplace-summary .market-stat-detail,
+html[data-theme]:not([data-theme="light"]) #marketplace-intro p,
+html[data-theme]:not([data-theme="light"]) .market-results-row,
+html[data-theme]:not([data-theme="light"]) #market-controls label,
+html[data-theme]:not([data-theme="light"]) .wallet-card span,
+html[data-theme]:not([data-theme="light"]) .wallet-card small,
+html[data-theme]:not([data-theme="light"]) #balances .wallet-card span,
+html[data-theme]:not([data-theme="light"]) #balances .wallet-card small {
+  color:var(--theme-text-soft);
+}
+html[data-theme]:not([data-theme="light"]) #tasks .task-reward {color:var(--theme-accent)}
+html[data-theme]:not([data-theme="light"]) #referral-box,
+html[data-theme]:not([data-theme="light"]) #marketplace-intro,
+html[data-theme]:not([data-theme="light"]) .workspace-hero,
+html[data-theme]:not([data-theme="light"]) .support-intro,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-cta,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-strip {
+  background:var(--theme-hero,linear-gradient(120deg,#223d30,#1a2d25 68%,#403629));
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) #marketplace-summary .market-stat,
+html[data-theme]:not([data-theme="light"]) #market-empty {
+  background:var(--theme-surface);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+  box-shadow:var(--theme-shadow);
+}
+html[data-theme]:not([data-theme="light"]) #marketplace-attention,
+html[data-theme]:not([data-theme="light"]) #notice:not(:empty),
+html[data-theme]:not([data-theme="light"]) #profile-notice:not(:empty),
+html[data-theme]:not([data-theme="light"]) .work-status:not(:empty) {
+  background:var(--theme-warning-bg);
+  color:var(--theme-warning-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) .workspace-kicker,
+html[data-theme]:not([data-theme="light"]) #marketplace-intro .market-kicker,
+html[data-theme]:not([data-theme="light"]) .support-intro .eyebrow,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-kicker {
+  color:var(--theme-accent);
+}
+html[data-theme]:not([data-theme="light"]) .workspace-hero h2,
+html[data-theme]:not([data-theme="light"]) .workspace-hero p,
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-card strong,
+html[data-theme]:not([data-theme="light"]) .support-intro h1,
+html[data-theme]:not([data-theme="light"]) .support-intro p:not(.eyebrow),
+html[data-theme]:not([data-theme="light"]) .support-illustration strong,
+html[data-theme]:not([data-theme="light"]) #landing h1,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-steps h3,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-cta h2,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-footer .brand {
+  color:var(--theme-ink);
+}
+html[data-theme]:not([data-theme="light"]) #landing .welcome-hero {background:var(--theme-halo,radial-gradient(circle at 75% 40%,#254634 0%,#14251d 47%,transparent 82%))}
+html[data-theme]:not([data-theme="light"]) #landing h1 em,
+html[data-theme]:not([data-theme="light"]) #landing h2 em,
+html[data-theme]:not([data-theme="light"]) .workspace-hero h2 em {color:var(--theme-highlight,#f1ca8b)}
+html[data-theme]:not([data-theme="light"]) #landing .hero-description,
+html[data-theme]:not([data-theme="light"]) #landing .hero-footnote,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-steps p,
+html[data-theme]:not([data-theme="light"]) #landing .how-heading>p:last-child,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-cta p:last-child,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-footer p,
+html[data-theme]:not([data-theme="light"]) .workspace-hero-copy p,
+html[data-theme]:not([data-theme="light"]) .support-intro p:not(.eyebrow) {color:var(--theme-text-soft)}
+html[data-theme]:not([data-theme="light"]) .illustration-card,
+html[data-theme]:not([data-theme="light"]) .floating-note,
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-card,
+html[data-theme]:not([data-theme="light"]) .support-illustration,
+html[data-theme]:not([data-theme="light"]) .welcome-steps>div,
+html[data-theme]:not([data-theme="light"]) #landing .welcome-steps>div {
+  background:var(--theme-surface-alt);
+  color:var(--theme-ink);
+  border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-circle {background:var(--theme-orbit,linear-gradient(145deg,#294d3b,#53623a));border-color:var(--theme-border)}
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-mini {background:var(--theme-panel);color:var(--theme-ink)}
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-mini span,
+html[data-theme]:not([data-theme="light"]) .workspace-art .art-card small,
+html[data-theme]:not([data-theme="light"]) .support-illustration small {color:var(--theme-text-soft)}
+html[data-theme]:not([data-theme="light"]) body:has(#auth:not([hidden])) #auth {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  color:var(--theme-ink);
+}
+html[data-theme]:not([data-theme="light"]) #landing .illustration-card .illustration-task,
+html[data-theme]:not([data-theme="light"]) #landing .illustration-bottom {color:var(--theme-ink)}
+html[data-theme]:not([data-theme="light"]) #landing .illustration-task small,
+html[data-theme]:not([data-theme="light"]) #landing .illustration-bottom small {color:var(--theme-text-muted)}
+html[data-theme]:not([data-theme="light"]) .support-form label,
+html[data-theme]:not([data-theme="light"]) .section-lead,
+html[data-theme]:not([data-theme="light"]) .form-hint,
+html[data-theme]:not([data-theme="light"]) .thread-row .thread-meta,
+html[data-theme]:not([data-theme="light"]) .thread-row .thread-status.closed,
+html[data-theme]:not([data-theme="light"]) .empty-state,
+html[data-theme]:not([data-theme="light"]) .member-row p,
+html[data-theme]:not([data-theme="light"]) .message-stream p,
+html[data-theme]:not([data-theme="light"]) .message-stream small,
+html[data-theme]:not([data-theme="light"]) .alert-row p,
+html[data-theme]:not([data-theme="light"]) .compact-help p,
+html[data-theme]:not([data-theme="light"]) .work-hint,
+html[data-theme]:not([data-theme="light"]) .work-field,
+html[data-theme]:not([data-theme="light"]) .admin-finances-search label,
+html[data-theme]:not([data-theme="light"]) .admin-finances-table .admin-finances-member small,
+html[data-theme]:not([data-theme="light"]) .admin-finances-help {
+  color:var(--theme-text-soft);
+}
+html[data-theme]:not([data-theme="light"]) .message-stream article.from-admin {background:var(--theme-panel)}
+html[data-theme]:not([data-theme="light"]) .support-count,
+html[data-theme]:not([data-theme="light"]) .thread-row .thread-status.closed {background:var(--theme-warning-bg);color:var(--theme-warning-ink)}
+html[data-theme]:not([data-theme="light"]) .alert-row {border-color:var(--theme-border)}
+html[data-theme]:not([data-theme="light"]) .admin-finances-table th,
+html[data-theme]:not([data-theme="light"]) .admin-finances-table td {border-color:var(--theme-border)}
+html[data-theme]:not([data-theme="light"]) .admin-finances-table thead th {
+  background:var(--theme-surface-alt);
+  color:var(--theme-text-soft);
+}
+html[data-theme]:not([data-theme="light"]) .admin-finances-table .admin-finances-negative {color:var(--theme-negative,#ff9990)}
+html[data-theme]:not([data-theme="light"]) .admin-finances-table .admin-finances-requested {color:var(--theme-warning-ink)}
+html[data-theme]:not([data-theme="light"]) .admin-finances-scroll {border-color:var(--theme-border)}
+html[data-theme]:not([data-theme="light"]) #mobile-work-nav {
+  background:var(--theme-surface);
+  border-color:var(--theme-border);
+  box-shadow:0 -8px 24px #0004;
+}
+html[data-theme]:not([data-theme="light"]) #mobile-work-nav a {color:var(--theme-text-soft)}
+html[data-theme]:not([data-theme="light"]) .work-overlay {background:rgba(0,0,0,.78)}
+html[data-theme]:not([data-theme="light"]) .work-actions button.secondary {color:var(--theme-ink)}
+html[data-theme]:not([data-theme="light"]) .market-admin-catalog summary {color:var(--theme-accent)}
+html[data-theme]:not([data-theme="light"]) .market-admin-catalog p,
+html[data-theme]:not([data-theme="light"]) .admin-zone .admin-section-heading p:last-child {color:var(--theme-text-soft)}
+html[data-theme]:not([data-theme="light"]) .admin-zone .admin-section-heading,
+html[data-theme]:not([data-theme="light"]) #tasks .task-detail,
+html[data-theme]:not([data-theme="light"]) #tasks .market-policy {border-color:var(--theme-border)}
+@media(prefers-reduced-motion:reduce) {
+  .theme-switcher, .theme-switcher select {transition:none}
+}
+
+
+/* Creative collection 2026 — each palette is a full semantic appearance.
+ * Light and dark remain backwards compatible; additional themes add only tokens.
+ * Theme controls, task ownership, payouts and moderation logic are never modified. */
+html[data-theme="dark"][data-theme]{
+  --theme-hero:linear-gradient(120deg,#223d30,#1a2d25 68%,#403629);
+  --theme-halo:radial-gradient(circle at 75% 40%,#254634 0%,#14251d 47%,transparent 82%);
+  --theme-orbit:linear-gradient(145deg,#294d3b,#53623a);
+  --theme-highlight:#f1ca8b;
+  --theme-negative:#ff9990;
+}
+html[data-theme="eden"][data-theme]{
+  --theme-bg:#f3f6ee;
+  --theme-surface:#fffef9;
+  --theme-surface-alt:#f7f9f0;
+  --theme-panel:#e2eddf;
+  --theme-ink:#213b2c;
+  --theme-text-soft:#456551;
+  --theme-text-muted:#567365;
+  --theme-border:#cadbcc;
+  --theme-accent:#296448;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#e3f2e3;
+  --theme-warning-bg:#fff2d9;
+  --theme-warning-ink:#795315;
+  --theme-link:#215940;
+  --theme-shadow:0 12px 32px rgba(44,91,59,.08);
+  --theme-hero:linear-gradient(116deg,#e0efd9 0%,#f5f5e5 55%,#f9dfe5 100%);
+  --theme-halo:radial-gradient(circle at 76% 32%,#d7ebd0 0%,#f8f6e8 44%,transparent 80%);
+  --theme-orbit:linear-gradient(145deg,#c8e1c0,#f3e2cf);
+  --theme-highlight:#a34067;
+  --theme-negative:#af3542;
+}
+html[data-theme="sunrise"][data-theme]{
+  --theme-bg:#fff4e9;
+  --theme-surface:#fffdf8;
+  --theme-surface-alt:#fff0dd;
+  --theme-panel:#fbe0c0;
+  --theme-ink:#4b3022;
+  --theme-text-soft:#75533e;
+  --theme-text-muted:#80634f;
+  --theme-border:#e9caaa;
+  --theme-accent:#a74b28;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#f9e2c9;
+  --theme-warning-bg:#fff0c8;
+  --theme-warning-ink:#835017;
+  --theme-link:#8a3c21;
+  --theme-shadow:0 12px 32px rgba(145,78,38,.09);
+  --theme-hero:linear-gradient(116deg,#ffdfbf,#fff2d3 58%,#f8c4b4);
+  --theme-halo:radial-gradient(circle at 76% 33%,#ffd09e 0%,#fff1d8 46%,transparent 82%);
+  --theme-orbit:linear-gradient(145deg,#ffc88d,#f4d2c2);
+  --theme-highlight:#9e432a;
+  --theme-negative:#b33238;
+}
+html[data-theme="ocean"][data-theme]{
+  --theme-bg:#eaf6f9;
+  --theme-surface:#faffff;
+  --theme-surface-alt:#f0faff;
+  --theme-panel:#d8eef5;
+  --theme-ink:#173f4a;
+  --theme-text-soft:#476c79;
+  --theme-text-muted:#567883;
+  --theme-border:#c0dfe8;
+  --theme-accent:#176a83;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#dcedf5;
+  --theme-warning-bg:#fff5db;
+  --theme-warning-ink:#765019;
+  --theme-link:#125872;
+  --theme-shadow:0 12px 33px rgba(36,111,138,.09);
+  --theme-hero:linear-gradient(117deg,#cdebf5 0%,#e7f8f2 53%,#d8e8ff 100%);
+  --theme-halo:radial-gradient(circle at 76% 34%,#b4e4ef 0%,#e8f7f6 48%,transparent 83%);
+  --theme-orbit:linear-gradient(145deg,#b6e1ee,#a9d8d3);
+  --theme-highlight:#126b8a;
+  --theme-negative:#ac334b;
+}
+html[data-theme="orchid"][data-theme]{
+  --theme-bg:#f7f0fb;
+  --theme-surface:#fffaff;
+  --theme-surface-alt:#f7effd;
+  --theme-panel:#ebddf6;
+  --theme-ink:#392748;
+  --theme-text-soft:#675778;
+  --theme-text-muted:#776588;
+  --theme-border:#ddcce9;
+  --theme-accent:#754c9d;
+  --theme-accent-contrast:#fff;
+  --theme-badge-bg:#eddef8;
+  --theme-warning-bg:#fff2e5;
+  --theme-warning-ink:#86541f;
+  --theme-link:#69458c;
+  --theme-shadow:0 12px 34px rgba(101,62,130,.09);
+  --theme-hero:linear-gradient(115deg,#ebdafa 0%,#f9e9f3 53%,#e5dff8 100%);
+  --theme-halo:radial-gradient(circle at 75% 36%,#e6ccf9 0%,#f9e9f6 48%,transparent 83%);
+  --theme-orbit:linear-gradient(145deg,#e0ccfa,#f3cdda);
+  --theme-highlight:#924477;
+  --theme-negative:#aa3359;
+}
+html[data-theme="aurora"][data-theme]{
+  --theme-bg:#081b21;
+  --theme-surface:#123038;
+  --theme-surface-alt:#193c43;
+  --theme-panel:#20525a;
+  --theme-ink:#e6faf4;
+  --theme-text-soft:#b8dcd7;
+  --theme-text-muted:#a9cbc5;
+  --theme-border:#3b6670;
+  --theme-accent:#7af5cd;
+  --theme-accent-contrast:#08291f;
+  --theme-badge-bg:#25544d;
+  --theme-warning-bg:#4d4029;
+  --theme-warning-ink:#ffe2a4;
+  --theme-link:#9af8de;
+  --theme-shadow:0 12px 34px rgba(0,0,0,.29);
+  --theme-hero:linear-gradient(115deg,#14464b 0%,#17343f 60%,#403d62 100%);
+  --theme-halo:radial-gradient(circle at 77% 32%,#205d63 0%,#112e3a 51%,transparent 83%);
+  --theme-orbit:linear-gradient(145deg,#257c73,#344675);
+  --theme-highlight:#e8e6ac;
+  --theme-negative:#ffa7a2;
+}
+html[data-theme="velvet"][data-theme]{
+  --theme-bg:#1e1422;
+  --theme-surface:#322238;
+  --theme-surface-alt:#3f2d46;
+  --theme-panel:#523650;
+  --theme-ink:#fff0f7;
+  --theme-text-soft:#e5cade;
+  --theme-text-muted:#d5aecb;
+  --theme-border:#70476a;
+  --theme-accent:#ffb8c5;
+  --theme-accent-contrast:#472035;
+  --theme-badge-bg:#60394d;
+  --theme-warning-bg:#59402e;
+  --theme-warning-ink:#ffdda5;
+  --theme-link:#ffd0dc;
+  --theme-shadow:0 13px 35px rgba(0,0,0,.30);
+  --theme-hero:linear-gradient(118deg,#4f2f4e,#34253d 62%,#60433a);
+  --theme-halo:radial-gradient(circle at 75% 34%,#6f3b61 0%,#34213a 50%,transparent 84%);
+  --theme-orbit:linear-gradient(145deg,#91516e,#7e5e84);
+  --theme-highlight:#ffddab;
+  --theme-negative:#ffa2ab;
+}
+html[data-theme="cosmos"][data-theme]{
+  --theme-bg:#0e1530;
+  --theme-surface:#192542;
+  --theme-surface-alt:#243153;
+  --theme-panel:#2b4165;
+  --theme-ink:#f1f7ff;
+  --theme-text-soft:#cadcf3;
+  --theme-text-muted:#b5c7e2;
+  --theme-border:#445778;
+  --theme-accent:#83e6ff;
+  --theme-accent-contrast:#092338;
+  --theme-badge-bg:#294e65;
+  --theme-warning-bg:#55422c;
+  --theme-warning-ink:#ffe0a0;
+  --theme-link:#a9ecff;
+  --theme-shadow:0 13px 38px rgba(0,0,0,.32);
+  --theme-hero:linear-gradient(115deg,#223a64,#1f2b4d 57%,#4d3665);
+  --theme-halo:radial-gradient(circle at 76% 36%,#304f88 0%,#1c2b50 48%,transparent 83%);
+  --theme-orbit:linear-gradient(145deg,#2d74a2,#69518e);
+  --theme-highlight:#ffe3a1;
+  --theme-negative:#ffb2bd;
+}
+
+/* All non-default themes use the semantic overrides above without imposing
+   dark colors on light variants. Accent, hero and panels remain theme-specific. */
+html[data-theme]:not([data-theme="light"]) body {
+  background-image:radial-gradient(circle at 85% 12%,color-mix(in srgb,var(--theme-accent) 6%,transparent) 0%,transparent 39%);
+}
+html[data-theme]:not([data-theme="light"]) .theme-switcher-swatch,
+.theme-switcher-swatch {
+  width:14px;height:14px;display:inline-block;flex:0 0 auto;
+  border-radius:50%;background:var(--theme-accent);
+  box-shadow:0 0 0 3px var(--theme-badge-bg),0 0 0 4px var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) #market-view-switch {
+  background:var(--theme-surface-alt);border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) #market-view-switch button {
+  background:transparent;color:var(--theme-text-soft);
+}
+html[data-theme]:not([data-theme="light"]) #market-view-switch button[aria-pressed="true"] {
+  background:var(--theme-panel);color:var(--theme-ink);border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) .qualification-required {
+  border-color:var(--theme-border);background:var(--theme-warning-bg);
+  color:var(--theme-warning-ink);
+}
+html[data-theme]:not([data-theme="light"]) #admin-qualification-tools form {
+  border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) #admin-qualification-tools form input,
+html[data-theme]:not([data-theme="light"]) #admin-qualification-tools form select {
+  background:var(--theme-surface-alt);color:var(--theme-ink);border-color:var(--theme-border);
+}
+html[data-theme]:not([data-theme="light"]) .theme-switcher select {
+  border-color:var(--theme-border);box-shadow:var(--theme-shadow);
+}
+html[data-theme]:not([data-theme="light"]) .site-header {
+  border-bottom:2px solid color-mix(in srgb,var(--theme-accent) 37%,var(--theme-border));
+}
+html[data-theme]:not([data-theme="light"]) .market-admin-catalog label,
+html[data-theme]:not([data-theme="light"]) .work-field {
+  color:var(--theme-text-soft);
+}
+@media(prefers-reduced-motion:no-preference){
+  .theme-switcher-swatch {transition:background-color 240ms ease,box-shadow 240ms ease}
+  .theme-switcher select {transition:border-color 240ms ease,background-color 240ms ease}
+}
