@@ -37,22 +37,30 @@ test('PostgreSQL: authentication, referrals, hold and final moderation', {skip: 
   method:'POST',body:{email:'admin@local.test',password:'IntegrationTestOnly123'}
  });
  assert.equal(crossLogin.status,200,crossLogin.body);
- const sharedCookie=crossLogin.cookie;
- assert.match(sharedCookie,/Domain=taskharbor\.cc\.cd/);
- assert.match(sharedCookie,/SameSite=Lax/);
- assert.match(sharedCookie,/Secure/);
- const sessionCookie=sharedCookie.split(';')[0];
- for(const site of ['taskharbor.cc.cd','www.taskharbor.cc.cd']){
+ const cookies=crossLogin.cookie;
+ // The first cookie is host-only: this is the reliable fallback if a
+ // browser rejects a shared-domain cookie on an AppSail custom hostname.
+ assert.match(cookies,/^session=[a-f0-9]{64}; HttpOnly; SameSite=Lax; Path=\/; Secure; Max-Age=86400/);
+ assert.match(cookies,/session_shared=[a-f0-9]{64}; HttpOnly; SameSite=Lax; Path=\/; Secure; Domain=taskharbor\.cc\.cd; Max-Age=86400/);
+ const sessionCookie=cookies.match(/^session=[a-f0-9]{64}/)[0];
+ const sharedSessionCookie=cookies.match(/session_shared=[a-f0-9]{64}/)[0];
+ for(const [site,cookie] of [
+  ['www.taskharbor.cc.cd',sessionCookie],
+  ['www.taskharbor.cc.cd',sharedSessionCookie],
+  ['taskharbor.cc.cd',sharedSessionCookie]
+ ]){
   for(const route of ['/api/state','/api/contact']){
-   const response=await hostnameRequest(site,route,{cookie:sessionCookie});
+   const response=await hostnameRequest(site,route,{cookie});
    assert.equal(response.status,200,site+' '+route+' must keep session: '+response.body);
   }
  }
- const overlapped='session='+('0'.repeat(64))+'; '+sessionCookie;
+ const overlapped='session='+('0'.repeat(64))+'; '+sessionCookie+'; '+sharedSessionCookie;
  assert.equal((await hostnameRequest('www.taskharbor.cc.cd','/api/state',{cookie:overlapped})).status,200);
- const signedOut=await hostnameRequest('taskharbor.cc.cd','/api/logout',{method:'POST',cookie:overlapped,body:{}});
+ const signedOut=await hostnameRequest('www.taskharbor.cc.cd','/api/logout',{method:'POST',cookie:overlapped,body:{}});
  assert.equal(signedOut.status,200,signedOut.body);
+ assert.match(signedOut.cookie,/session_shared=; HttpOnly; SameSite=Lax; Path=\/; Secure; Domain=taskharbor\.cc\.cd; Max-Age=0/);
  assert.equal((await hostnameRequest('www.taskharbor.cc.cd','/api/state',{cookie:sessionCookie})).status,401);
+ assert.equal((await hostnameRequest('taskharbor.cc.cd','/api/state',{cookie:sharedSessionCookie})).status,401);
  const referrer=await post('register',{email:'referrer@test.local',password:'ReferrerPassword123'});assert.equal(referrer.status,200);
  const referrerState=()=>fetch(base+'/api/state',{headers:{Cookie:referrer.cookie}}).then(r=>r.json());
  const referralCode=(await referrerState()).profile.short_code;
